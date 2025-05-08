@@ -1,0 +1,45 @@
+﻿<Window x:Class="LABOGRA.Views.Login.LoginView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Login" Height="550" Width="450" WindowStartupLocation="CenterScreen" Background="#EAF2FA">
+    <Border Background="White" CornerRadius="15" BorderBrush="#4682B4" BorderThickness="2" Padding="20">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Single Line Welcome Text -->
+            <TextBlock Text="Welcome In OGRALAB" FontSize="28" FontWeight="Bold" Foreground="#1E90FF" FontFamily="Segoe Script" HorizontalAlignment="Center" Grid.Row="0" Margin="0,20,0,30" />
+
+            <!-- Username Label -->
+            <TextBlock Text="Username:" FontSize="14" FontWeight="Bold" Foreground="Black" Grid.Row="1" HorizontalAlignment="Left" Margin="10,0,0,10" />
+            <ComboBox x:Name="UsernameComboBox" Width="250" Height="30" Grid.Row="1" HorizontalAlignment="Center" Margin="0,0,0,10" IsEditable="True" />
+
+            <!-- Password Label -->
+            <TextBlock Text="Password:" FontSize="14" FontWeight="Bold" Foreground="Black" Grid.Row="2" HorizontalAlignment="Left" Margin="10,0,0,10" />
+            <PasswordBox x:Name="PasswordBox" Width="250" Height="30" Grid.Row="2" HorizontalAlignment="Center" Margin="0,0,0,10" />
+
+            <!-- Options -->
+            <StackPanel Orientation="Horizontal" Grid.Row="3" HorizontalAlignment="Center" Margin="0,20,0,30">
+                <CheckBox x:Name="ShowPasswordCheckBox" Content="Show Password" FontSize="12" Foreground="Purple" Margin="0,0,40,0" />
+                <CheckBox x:Name="RememberMeCheckBox" Content="Remember Me" FontSize="12" Foreground="Purple" />
+            </StackPanel>
+
+            <!-- Login Button -->
+            <Button Content="Login" Width="150" Height="40" Background="#FF4500" Foreground="White" FontSize="14" FontWeight="Bold" Grid.Row="5" HorizontalAlignment="Center" Margin="0,0,0,30" Click="LoginButton_Click">
+                <Button.Effect>
+                    <DropShadowEffect Color="Black" ShadowDepth="5" BlurRadius="10" />
+                </Button.Effect>
+            </Button>
+
+            <!-- Program Name -->
+            <TextBlock Text="OGRALAB" FontSize="24" FontWeight="Bold" Foreground="#FF4500" FontFamily="Segoe Script" HorizontalAlignment="Center" Grid.Row="6" Margin="0,0,0,10" />
+        </Grid>
+    </Border>
+</Window>

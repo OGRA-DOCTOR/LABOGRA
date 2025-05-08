@@ -1,0 +1,115 @@
+﻿<UserControl x:Class="LABOGRA.Views.TestsManagement.TestsManagementView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:LABOGRA.Views.TestsManagement"
+             xmlns:viewmodels="clr-namespace:LABOGRA.ViewModels"
+             d:DataContext="{d:DesignInstance Type=viewmodels:TestsManagementViewModel}"
+             mc:Ignorable="d" 
+             d:DesignHeight="500" d:DesignWidth="800"
+             Background="#EAF2FA">
+
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- للعنوان -->
+            <RowDefinition Height="Auto"/>
+            <!-- لحقول الإدخال -->
+            <RowDefinition Height="Auto"/>
+            <!-- للأزرار -->
+            <RowDefinition Height="*"/>
+            <!-- لقائمة التحاليل -->
+        </Grid.RowDefinitions>
+
+        <!-- العنوان -->
+        <TextBlock Grid.Row="0" Text="إدارة أنواع التحاليل" 
+                   FontSize="22" FontWeight="Bold" Foreground="#1E90FF" 
+                   HorizontalAlignment="Center" Margin="0,0,0,20"/>
+
+        <!-- حقول الإدخال -->
+        <StackPanel Grid.Row="1" Orientation="Vertical" Margin="0,0,0,15">
+            <StackPanel Orientation="Horizontal" Margin="0,5">
+                <TextBlock Text="اسم التحليل:" Width="100" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding TestName, UpdateSourceTrigger=PropertyChanged}" Width="250" Height="25"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="0,5">
+                <TextBlock Text="الاختصار:" Width="100" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding TestAbbreviation, UpdateSourceTrigger=PropertyChanged}" Width="150" Height="25"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="0,5">
+                <TextBlock Text="الوحدة:" Width="100" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding TestUnit, UpdateSourceTrigger=PropertyChanged}" Width="150" Height="25"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,5">
+                <TextBlock Text="القيم المرجعية:" Width="100" VerticalAlignment="Center"/>
+                <TextBox Text="{Binding TestReferenceRange, UpdateSourceTrigger=PropertyChanged}" Width="350" Height="25" TextWrapping="Wrap" AcceptsReturn="True"/>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- الأزرار -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
+            <Button Content="حفظ" Command="{Binding SaveTestCommand}" Width="100" Height="30" Margin="5" Background="#4CAF50" Foreground="White" FontWeight="Bold"/>
+            <Button Content="تعديل" Command="{Binding EditTestCommand}" Width="100" Height="30" Margin="5" Background="#FF9800" Foreground="White" FontWeight="Bold"/>
+            <Button Content="حذف" Command="{Binding DeleteTestCommand}" Width="100" Height="30" Margin="5" Background="#F44336" Foreground="White" FontWeight="Bold"/>
+            <Button Content="إلغاء" Command="{Binding CancelEditCommand}" Width="100" Height="30" Margin="5" Background="#607D8B" Foreground="White" FontWeight="Bold"/>
+        </StackPanel>
+
+        <!-- قائمة التحاليل -->
+        <ListView Grid.Row="3" ItemsSource="{Binding Tests}" SelectedItem="{Binding SelectedTest}" BorderBrush="#4682B4" BorderThickness="1">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="الاسم الكامل للتحليل" Width="300">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" TextWrapping="Wrap"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="الاختصار" Width="120">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Abbreviation}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="الوحدة" Width="100">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Unit}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <!-- **** بداية التصحيح للخطأ **** -->
+                    <GridViewColumn Header="القيم المرجعية">
+                        <!-- تم إزالة Width="*" -->
+                        <!-- **** نهاية التصحيح للخطأ **** -->
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding ReferenceRange}" TextWrapping="Wrap"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+            <!-- 
+            إذا كنت تفضل عرضاً مبسطاً مشابهاً لـ PatientsView (اسم واختصار فقط في سطر واحد):
+            يمكنك إزالة ListView.View بالكامل واستخدام ItemTemplate كما فعلنا هناك:
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock>
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="{}{0} ({1})">
+                                <Binding Path="Name"/>
+                                <Binding Path="Abbreviation" FallbackValue=""/>
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+            -->
+        </ListView>
+    </Grid>
+</UserControl>

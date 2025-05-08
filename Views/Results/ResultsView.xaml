@@ -1,0 +1,108 @@
+﻿<UserControl x:Class="LABOGRA.Views.Results.ResultsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:LABOGRA.Views.Results"
+             xmlns:viewmodels="clr-namespace:LABOGRA.ViewModels" 
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance Type=viewmodels:ResultsViewModel, IsDesignTimeCreatable=False}" 
+             d:DesignHeight="600" d:DesignWidth="900" 
+             Background="#EAF2FA"
+             FlowDirection="RightToLeft">
+
+    <UserControl.DataContext>
+        <viewmodels:ResultsViewModel/>
+    </UserControl.DataContext>
+
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="تسجيل النتائج" FontSize="22" FontWeight="Bold" Foreground="#1E90FF" HorizontalAlignment="Center" Margin="0,0,0,15"/>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,15">
+            <TextBlock Text="اختر المريض:" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold"/>
+            <ComboBox ItemsSource="{Binding PatientList}" 
+                      SelectedItem="{Binding SelectedPatient}"
+                      DisplayMemberPath="Name" 
+                      MinWidth="350" 
+                      VerticalAlignment="Center"
+                      IsEnabled="True" >
+                <ComboBox.ToolTip>
+                    <TextBlock Text="اختر المريض لعرض تحاليله وإدخال النتائج"/>
+                </ComboBox.ToolTip>
+            </ComboBox>
+        </StackPanel>
+
+        <Border Grid.Row="2" BorderBrush="#4682B4" BorderThickness="1" CornerRadius="5" Padding="5">
+            <ListView ItemsSource="{Binding LabOrderItems}" HorizontalContentAlignment="Stretch">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="Margin" Value="0,3"/>
+                        <Setter Property="Padding" Value="5,3"/>
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.View>
+                    <GridView AllowsColumnReorder="False">
+                        <GridViewColumn Header="التحليل" Width="250">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <!-- التأكد أن الربط هنا لا يتضمن Mode=TwoWay بشكل ضمني أو صريح -->
+                                    <TextBlock FlowDirection="LeftToRight" TextWrapping="Wrap"> 
+                                          <Run Text="{Binding TestName, Mode=OneWay}" FontWeight="SemiBold"/> <!-- تحديد Mode=OneWay صراحة -->
+                                          <Run Text="{Binding TestAbbreviation, Mode=OneWay, StringFormat=({0})}" Foreground="Gray"/> <!-- تحديد Mode=OneWay صراحة -->
+                                    </TextBlock>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <GridViewColumn Header="النتيجة" Width="150">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <!-- TextBox يستخدم TwoWay بشكل افتراضي، وهذا صحيح لـ ResultValue -->
+                                    <TextBox Text="{Binding ResultValue, UpdateSourceTrigger=PropertyChanged}" 
+                                              MinWidth="120" 
+                                              FlowDirection="LeftToRight"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <GridViewColumn Header="الوحدة" Width="80">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Unit, Mode=OneWay}" Foreground="DarkSlateGray"/>
+                                    <!-- تحديد Mode=OneWay صراحة -->
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <GridViewColumn Header="المعدل الطبيعي" Width="200">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding DisplayReferenceRange, Mode=OneWay}" Foreground="DarkSlateGray" TextWrapping="Wrap"/>
+                                    <!-- تحديد Mode=OneWay صراحة -->
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <GridViewColumn Header="حفظ" Width="80">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Content="حفظ" 
+                                             Command="{Binding SaveResultCommand}" 
+                                             Padding="8,3"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Border>
+
+    </Grid>
+</UserControl>
