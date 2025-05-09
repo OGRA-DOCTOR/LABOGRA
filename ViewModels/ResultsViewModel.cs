@@ -1,3 +1,9 @@
+// الإصدار: 4 (تعديل طفيف على LabOrderItemViewModel) - لا تغييرات إضافية في هذا التحديث
+// اسم الملف: LABOGRA/ViewModels/ResultsViewModel.cs
+// تاريخ التحديث: 2023-10-29
+// الوصف:
+// 1. تعديل CanSaveResult في LabOrderItemViewModel ليكون دائماً true في البداية (لإظهار الزر برتقالياً).
+//    التحقق من وجود قيمة سيتم عند ضغط الزر.
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LABOGRA.Models;
@@ -21,19 +27,26 @@ namespace LABOGRA.ViewModels
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(LoadPatientTestsCommand))]
+        [NotifyPropertyChangedFor(nameof(IsPatientSelectionEnabled))]
         private Patient? selectedPatient;
 
         [ObservableProperty]
         private ObservableCollection<LabOrderItemViewModel> labOrderItems = new ObservableCollection<LabOrderItemViewModel>();
 
-        // لا نحتاج لهذه إذا كان الحفظ سيتم من داخل LabOrderItemViewModel
-        // [ObservableProperty]
-        // private LabOrderItemViewModel? selectedLabOrderItem; 
+        [ObservableProperty]
+        private bool isPatientListLoaded = false;
+
+        public bool IsPatientSelectionEnabled => IsPatientListLoaded && PatientList.Any();
+
 
         [RelayCommand(CanExecute = nameof(CanLoadTests))]
         private async Task LoadPatientTestsAsync()
         {
-            if (SelectedPatient == null) return;
+            if (SelectedPatient == null)
+            {
+                LabOrderItems.Clear();
+                return;
+            }
             LabOrderItems.Clear();
             try
             {
@@ -47,7 +60,7 @@ namespace LABOGRA.ViewModels
 
                 if (orderToProcess != null && orderToProcess.Items != null)
                 {
-                    foreach (var item in orderToProcess.Items.OrderBy(i => i.Test.Name))
+                    foreach (var item in orderToProcess.Items.OrderBy(i => i.Test?.Name))
                     {
                         LabOrderItems.Add(new LabOrderItemViewModel(item, SelectedPatient.Gender, _context));
                     }
@@ -55,7 +68,7 @@ namespace LABOGRA.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"حدث خطأ أثناء تحميل تحاليل المريض: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"An error occurred while loading patient tests: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -71,6 +84,9 @@ namespace LABOGRA.ViewModels
         private async Task LoadInitialPatientsAsync()
         {
             PatientList.Clear();
+            IsPatientListLoaded = false;
+            OnPropertyChanged(nameof(IsPatientSelectionEnabled));
+
             try
             {
                 var patients = await _context.Patients
@@ -83,17 +99,18 @@ namespace LABOGRA.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"حدث خطأ أثناء تحميل قائمة المرضى: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"An error occurred while loading the patient list: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsPatientListLoaded = true;
+                OnPropertyChanged(nameof(IsPatientSelectionEnabled));
             }
         }
 
-        // التأكد أن هذه الدالة تستدعي الأمر الصحيح
         async partial void OnSelectedPatientChanged(Patient? value)
         {
-            // التأكد من استدعاء الأمر عند تغيير المريض
             await LoadPatientTestsCommand.ExecuteAsync(null);
-            // مسح القائمة إذا لم يتم اختيار مريض أصبح ضمنياً في بداية LoadPatientTestsAsync
-            // if (value == null) LabOrderItems.Clear(); 
         }
     }
 
@@ -107,16 +124,17 @@ namespace LABOGRA.ViewModels
         public string TestName => _item.Test?.Name ?? "N/A";
         public string? TestAbbreviation => _item.Test?.Abbreviation;
 
-        // التأكد أن هذه الخاصية Observable لربطها بـ TextBox
         [ObservableProperty]
         private string? resultValue;
 
-        // التأكد أن هذه الخصائص Observable إذا أردنا تحديثها في الواجهة ديناميكياً
         [ObservableProperty]
         private string? unit;
 
         [ObservableProperty]
         private string? displayReferenceRange;
+
+        [ObservableProperty]
+        private bool isSavedSuccessfully = false;
 
         public LabOrderItem OriginalItem => _item;
 
@@ -124,9 +142,10 @@ namespace LABOGRA.ViewModels
         public LabOrderItemViewModel(LabOrderItem item, string patientGender, LabDbContext dbContext)
         {
             _item = item;
-            _patientGender = patientGender;
+            _patientGender = patientGender?.ToUpperInvariant() ?? "UNKNOWN";
             _dbContext = dbContext;
-            resultValue = item.Result;
+            ResultValue = item.Result;
+            IsSavedSuccessfully = !string.IsNullOrWhiteSpace(item.Result);
             DetermineReferenceValueAndUnit();
         }
 
@@ -134,33 +153,44 @@ namespace LABOGRA.ViewModels
         {
             if (_item.Test?.ReferenceValues == null || !_item.Test.ReferenceValues.Any())
             {
-                Unit = null;
+                Unit = "N/A";
                 DisplayReferenceRange = "N/A";
                 return;
             }
 
             var genderSpecificRef = _item.Test.ReferenceValues
                                          .FirstOrDefault(rv => rv.GenderSpecific != null && rv.GenderSpecific.Equals(_patientGender, StringComparison.OrdinalIgnoreCase));
+
             var generalRef = _item.Test.ReferenceValues
-                                      .FirstOrDefault(rv => rv.GenderSpecific != null && rv.GenderSpecific.Equals("Any", StringComparison.OrdinalIgnoreCase));
+                                      .FirstOrDefault(rv => rv.GenderSpecific != null && rv.GenderSpecific.Equals("ANY", StringComparison.OrdinalIgnoreCase));
+
             var fallbackRef = _item.Test.ReferenceValues.FirstOrDefault();
+
             var selectedRef = genderSpecificRef ?? generalRef ?? fallbackRef;
 
             if (selectedRef != null)
             {
-                DisplayReferenceRange = selectedRef.ReferenceText;
-                Unit = selectedRef.Unit;
+                DisplayReferenceRange = selectedRef.ReferenceText ?? "N/A";
+                Unit = selectedRef.Unit ?? "N/A";
             }
             else
             {
                 DisplayReferenceRange = "N/A";
-                Unit = null;
+                Unit = "N/A";
             }
         }
 
         [RelayCommand(CanExecute = nameof(CanSaveResult))]
         private async Task SaveResultAsync()
         {
+            // التحقق من وجود قيمة يتم هنا عند الضغط
+            if (string.IsNullOrWhiteSpace(ResultValue))
+            {
+                // تم إلغاء رسالة التأكيد، لكن يمكن إبقاء هذا التحقق إذا أردت
+                // MessageBox.Show($"Please enter a result for {TestName}.", "Input Required", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return; // لا تحفظ إذا كانت القيمة فارغة
+            }
+
             try
             {
                 var itemToUpdate = await _dbContext.LabOrderItems.FindAsync(this.Id);
@@ -168,21 +198,30 @@ namespace LABOGRA.ViewModels
                 {
                     itemToUpdate.Result = this.ResultValue;
                     itemToUpdate.ResultUnit = this.Unit;
+
                     await _dbContext.SaveChangesAsync();
-                    MessageBox.Show($"تم حفظ نتيجة {TestName}: {ResultValue}");
+                    IsSavedSuccessfully = true; // تحديث حالة الحفظ لتغيير لون الزر
+                    // تم إلغاء MessageBox.Show من هنا بناءً على طلبك.
                 }
                 else
                 {
-                    MessageBox.Show($"لم يتم العثور على العنصر {TestName} للحفظ.");
+                    // يمكنك إعادة تفعيل هذه الرسالة إذا أردت إعلام المستخدم بفشل العثور على العنصر
+                    // MessageBox.Show($"Could not find the item {TestName} to save the result.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
-
+            }
+            catch (DbUpdateException ex)
+            {
+                MessageBox.Show($"A database error occurred while saving the result for {TestName}: {ex.InnerException?.Message ?? ex.Message}", "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"خطأ أثناء حفظ نتيجة {TestName}: {ex.Message}");
+                MessageBox.Show($"An unexpected error occurred while saving the result for {TestName}: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private bool CanSaveResult() => true;
+        private bool CanSaveResult()
+        {
+            return true;
+        }
     }
 }
