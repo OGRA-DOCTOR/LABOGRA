@@ -4,7 +4,7 @@
 // الوصف:
 // 1. تحسين منطق انتقال التركيز الفعلي للكتابة إلى TextBox الصحيح عند استخدام Enter أو الأسهم.
 // 2. ضمان أن ListViewItem مُهيأ قبل محاولة التركيز.
-using LABOGRA.ViewModels;
+using LABOGRA.ViewModels; // هذا الـ using مطلوب للتعرف على LabOrderItemViewModel و ResultsViewModel
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -18,12 +18,15 @@ namespace LABOGRA.Views.Results
         public ResultsView()
         {
             InitializeComponent();
+            // *** هذا السطر يجب تفعيله لتعيين DataContext للـ View وعرض قائمة المرضى ***
+            DataContext = new ResultsViewModel();
         }
 
         private void ResultsListView_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (sender is not ListView listView || listView.Items.Count == 0) return;
 
+            // هنا يتم استخدام LabOrderItemViewModel، الآن سيتم العثور عليه
             var currentItemViewModel = listView.SelectedItem as LabOrderItemViewModel;
             int currentIndex = listView.SelectedIndex;
 
@@ -34,6 +37,7 @@ namespace LABOGRA.Views.Results
                 currentIndex = 0; // تحديث المؤشر
             }
 
+            // هنا يتم استخدام LabOrderItemViewModel
             // تحديث currentItemViewModel بعد التأكد من وجود تحديد
             currentItemViewModel = listView.SelectedItem as LabOrderItemViewModel;
 
