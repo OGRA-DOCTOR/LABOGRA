@@ -1,8 +1,9 @@
-﻿<!-- الإصدار: 6 -->
+﻿<!-- الإصدار: 7 -->
 <!-- اسم الملف: LABOGRA/Views/Results/ResultsView.xaml -->
 <!-- تاريخ التحديث: 2023-10-30 -->
 <!-- الوصف:
-    1. تعديل ستايل الصف المحدد (IsSelected) في ListView ليستخدم لون خلفية أفتح ولا يخفي النصوص.
+    1. تصحيح الخطأ XDG-0007: The resource "DarkTextBrush" has an incompatible type.
+       وذلك بتعديل كيفية تعيين اللون لـ SelectedItemTextBrush.
     2. الحفاظ على جميع التحسينات السابقة.
 -->
 <UserControl x:Class="LABOGRA.Views.Results.ResultsView"
@@ -32,14 +33,12 @@
         <SolidColorBrush x:Key="HeaderTextBrush" Color="White"/>
         <SolidColorBrush x:Key="ListItemAlternateBackgroundBrush" Color="#F0F8FF"/>
         <SolidColorBrush x:Key="BorderBrush" Color="#A9CCE3"/>
-        <!-- لون جديد لخلفية الصف المحدد -->
         <SolidColorBrush x:Key="SelectedItemBackgroundBrush" Color="#AED6F1"/>
-        <!-- لون أزرق سماوي فاتح للتحديد -->
-        <SolidColorBrush x:Key="SelectedItemTextBrush" Color="{StaticResource DarkTextBrush}"/>
-        <!-- للحفاظ على لون النص الداكن عند التحديد -->
 
+        <!-- تصحيح تعريف SelectedItemTextBrush -->
+        <SolidColorBrush x:Key="SelectedItemTextBrush" Color="{Binding Source={StaticResource DarkTextBrush}, Path=Color}"/>
 
-        <!-- أنماط الخطوط والأدوات (كما هي في الإصدار 5) -->
+        <!-- أنماط الخطوط والأدوات (كما هي في الإصدار 6) -->
         <Style TargetType="TextBlock" x:Key="LargeLabelTextStyle">
             <Setter Property="FontSize" Value="18"/>
             <Setter Property="FontWeight" Value="Bold"/>
@@ -184,15 +183,12 @@
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Background" Value="{StaticResource LightBlueBackgroundBrush}"/>
                             </Trigger>
-                            <!-- تعديل سلوك التحديد هنا -->
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter Property="Background" Value="{StaticResource SelectedItemBackgroundBrush}"/>
+                                <!-- السطر التالي معلق للحفاظ على ألوان النصوص الفردية. يمكن تفعيله إذا أردت لون نص موحد للصف المحدد -->
                                 <!-- <Setter Property="Foreground" Value="{StaticResource SelectedItemTextBrush}"/> -->
-                                <!-- السطر أعلاه يمكن إلغاء التعليق عنه إذا أردت تغيير لون كل النصوص في الصف المحدد إلى لون واحد داكن -->
-                                <!-- ولكن الإبقاء عليه معلقاً سيحافظ على ألوان النصوص الفردية لكل عمود -->
                                 <Setter Property="BorderBrush" Value="{StaticResource PrimaryBlueBrush}"/>
                                 <Setter Property="BorderThickness" Value="0,0,0,1.5"/>
-                                <!-- تمييز بسيط بحد سفلي أغمق -->
                             </Trigger>
                         </Style.Triggers>
                     </Style>
