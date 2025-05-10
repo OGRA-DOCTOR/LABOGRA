@@ -44,7 +44,9 @@ namespace LABOGRA.ViewModels
         private LabOrder? selectedLabOrder;
 
         // خاصية مساعدة لمعرفة ما إذا تم اختيار طلب تحليل (لتفعيل زر الطباعة)
-        public bool IsLabOrderSelected => SelectedLabOrder != null;
+        public bool IsLabOrderSelected => SelectedLabOrder != null &&
+            SelectedLabOrder.Items != null &&
+            SelectedLabOrder.Items.Any();
 
         // خاصية لعرض مؤشر تحميل في الواجهة (اختياري)
         [ObservableProperty]
@@ -90,6 +92,9 @@ namespace LABOGRA.ViewModels
                         }
                         // تحديد أول طلب في القائمة بشكل افتراضي إذا كانت غير فارغة
                         SelectedLabOrder = PatientLabOrders.FirstOrDefault();
+
+                        // تحديث حالة زر الطباعة
+                        PrintReportCommand.NotifyCanExecuteChanged();
                     });
                 }
             }
@@ -113,7 +118,7 @@ namespace LABOGRA.ViewModels
         private async Task PrintReportAsync()
         {
             // التحقق من أن هناك مريضاً وطلب تحليل مختارين وأن الطلب يحتوي على عناصر
-            if (SelectedPatient == null || SelectedLabOrder == null || !SelectedLabOrder.Items.Any())
+            if (SelectedPatient == null || SelectedLabOrder == null || SelectedLabOrder.Items == null || !SelectedLabOrder.Items.Any())
             {
                 MessageBox.Show("الرجاء اختيار مريض وطلب تحليل يحتوي على نتائج لطباعتها.", "خطأ في الطباعة", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
@@ -159,9 +164,8 @@ namespace LABOGRA.ViewModels
                         // عرض رسالة نجاح مع مسار الملف المحفوظ
                         MessageBox.Show($"تم إنشاء التقرير بنجاح وحفظه في: {filePath}", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
 
-                        // ملاحظة: لفتح الملف تلقائياً أو طباعته مباشرة، ستحتاج لاستخدام System.Diagnostics.Process
-                        // مثال:
-                        // System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath) { UseShellExecute = true });
+                        // فتح الملف بعد إنشائه
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath) { UseShellExecute = true });
                     }
                     else
                     {
@@ -178,11 +182,17 @@ namespace LABOGRA.ViewModels
             finally
             {
                 IsLoading = false; // تعطيل مؤشر التحميل
+                // تحديث حالة زر الطباعة
+                PrintReportCommand.NotifyCanExecuteChanged();
             }
         }
 
         // شرط لتنفيذ أمر PrintReportCommand: يمكن التنفيذ فقط إذا تم اختيار طلب تحليل (وبالتالي مريض ضمنياً) وليس هناك عملية تحميل جارية
-        private bool CanPrintReport() => SelectedLabOrder != null && !IsLoading;
+        private bool CanPrintReport() =>
+            SelectedLabOrder != null &&
+            SelectedLabOrder.Items != null &&
+            SelectedLabOrder.Items.Any() &&
+            !IsLoading;
 
 
         // مُنشئ الـ ViewModel
@@ -253,13 +263,16 @@ namespace LABOGRA.ViewModels
                 PatientLabOrders.Clear();
                 SelectedLabOrder = null;
             }
+
+            // تحديث حالة زر الطباعة
+            PrintReportCommand.NotifyCanExecuteChanged();
         }
 
-        // يمكن إضافة معالج لـ OnSelectedLabOrderChanged هنا إذا أردت تنفيذ شيء عند اختيار طلب تحليل
-        // (مثلاً، عرض تفاصيل عناصر الطلب في جزء آخر من الواجهة)
-        // partial void OnSelectedLabOrderChanged(LabOrder? value)
-        // {
-        //     // منطق عند تغيير طلب التحليل المختار
-        // }
+        // معالج تغيير طلب التحليل المحدد
+        partial void OnSelectedLabOrderChanged(LabOrder? value)
+        {
+            // تحديث حالة زر الطباعة
+            PrintReportCommand.NotifyCanExecuteChanged();
+        }
     }
 }

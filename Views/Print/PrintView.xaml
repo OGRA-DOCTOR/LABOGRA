@@ -1,19 +1,14 @@
-﻿<!-- الإصدار: جديد لوظيفة الطباعة -->
-<!-- اسم الملف: LABOGRA/Views/Print/PrintView.xaml -->
-<!-- الوصف: واجهة المستخدم لنافذة طباعة النتائج. تسمح باختيار مريض وطلب تحليل وطباعة التقرير. -->
-<UserControl x:Class="LABOGRA.Views.Print.PrintView"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:local="clr-namespace:LABOGRA.Views.Print"
-        xmlns:viewmodels="clr-namespace:LABOGRA.ViewModels"
-        mc:Ignorable="d"
-        d:DesignHeight="600" d:DesignWidth="900"
-        Background="#EAF2FA"
-        FlowDirection="RightToLeft">
-    <!-- تم إزالة السطر التالي الذي كان يسبب أخطاء المصمم XDG0008 و XDG0023: -->
-    <!-- d:DataContext="{d:DesignInstance Type=viewmodels:PrintViewModel}" -->
+﻿<UserControl x:Class="LABOGRA.Views.Print.PrintView"
+xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+xmlns:local="clr-namespace:LABOGRA.Views.Print"
+xmlns:viewmodels="clr-namespace:LABOGRA.ViewModels"
+mc:Ignorable="d"
+d:DesignHeight="600" d:DesignWidth="900"
+Background="#EAF2FA"
+FlowDirection="RightToLeft">
 
     <UserControl.Resources>
         <!-- تعريف الألوان الأساسية -->
@@ -49,9 +44,9 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="5">
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="5">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
@@ -88,8 +83,6 @@
         </DataTemplate>
 
         <!-- محول (Converter) لتحويل قيمة Boolean إلى Visibility (مطلوب لمؤشر التحميل) -->
-        <!-- إذا لم يكن هذا المحول معرفاً لديك بالفعل في مكان مركزي مثل App.xaml.cs، يجب تعريفه هنا أو هناك -->
-        <!-- مثال لتعريفه إذا لم يكن موجوداً: -->
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
 
     </UserControl.Resources>
@@ -108,9 +101,9 @@
 
         <!-- العنوان الرئيسي للواجهة -->
         <TextBlock Grid.Row="0" Text="طباعة النتائج"
-                   FontSize="30" FontWeight="ExtraBold"
-                   Foreground="{StaticResource PrimaryBlueBrush}"
-                   HorizontalAlignment="Center" Margin="0,0,0,25"/>
+               FontSize="30" FontWeight="ExtraBold"
+               Foreground="{StaticResource PrimaryBlueBrush}"
+               HorizontalAlignment="Center" Margin="0,0,0,25"/>
 
         <!-- StackPanel لاحتواء عناصر اختيار المريض وطلب التحليل -->
         <StackPanel Grid.Row="1" Orientation="Vertical" HorizontalAlignment="Center" Margin="0,0,0,20">
@@ -119,9 +112,9 @@
                 <TextBlock Text="اختر المريض:" Style="{StaticResource LabelTextStyle}"/>
                 <!-- ComboBox لربطه بقائمة المرضى وتحديد المريض المختار -->
                 <ComboBox ItemsSource="{Binding PatientList}"
-                          SelectedItem="{Binding SelectedPatient}"
-                          DisplayMemberPath="Name"
-                          Style="{StaticResource ComboBoxStyle}"/>
+                      SelectedItem="{Binding SelectedPatient}"
+                      DisplayMemberPath="Name"
+                      Style="{StaticResource ComboBoxStyle}"/>
             </StackPanel>
 
             <!-- اختيار طلب التحليل للمريض المختار -->
@@ -131,40 +124,23 @@
                 <!-- ItemTemplate يستخدم لعرض تفاصيل الطلب بشكل محدد -->
                 <!-- IsEnabled يربط بالخاصية IsPatientSelected لتفعيله فقط عند اختيار مريض -->
                 <ComboBox ItemsSource="{Binding PatientLabOrders}"
-                          SelectedItem="{Binding SelectedLabOrder}"
-                          ItemTemplate="{StaticResource LabOrderComboBoxTemplate}"
-                          Style="{StaticResource ComboBoxStyle}"
-                          IsEnabled="{Binding IsPatientSelected}"/>
+                      SelectedItem="{Binding SelectedLabOrder}"
+                      ItemTemplate="{StaticResource LabOrderComboBoxTemplate}"
+                      Style="{StaticResource ComboBoxStyle}"
+                      IsEnabled="{Binding IsPatientSelected}"/>
             </StackPanel>
         </StackPanel>
 
-        <!-- يمكن إضافة منطقة هنا لعرض تفاصيل عناصر طلب التحليل المختار إذا أردت معاينتها قبل الطباعة -->
-        <!-- مثال:
-         <Border Grid.Row="2" BorderBrush="#A9CCE3" BorderThickness="1" CornerRadius="5" Margin="0,0,0,20" Padding="5">
-             <ListView ItemsSource="{Binding SelectedLabOrderItems}" BorderThickness="0">
-                 <ListView.View>
-                     <GridView>
-                         <GridViewColumn Header="Test Name" DisplayMemberBinding="{Binding Test.Name}" Width="250"/>
-                         <GridViewColumn Header="Result" DisplayMemberBinding="{Binding Result}" Width="100"/>
-                         <GridViewColumn Header="Unit" DisplayMemberBinding="{Binding ResultUnit}" Width="80"/>
-                         <GridViewColumn Header="Reference Range" DisplayMemberBinding="{Binding ReferenceRange}" Width="200"/>
-                     </GridView>
-                 </GridView.View>
-             </ListView>
-         </Border>
-         -->
+        <!-- يمكن إضافة منطقة لتفاصيل عناصر الطلب المختار هنا -->
         <Grid Grid.Row="2"/>
-        <!-- استخدام Grid فارغة للحفاظ على التخطيط إذا لم تضف معاينة النتائج -->
-
 
         <!-- زر طباعة التقرير -->
         <!-- Command يربط بأمر PrintReportCommand في الـ ViewModel -->
         <!-- IsEnabled يربط بالخاصية IsLabOrderSelected لتفعيله فقط عند اختيار طلب تحليل -->
         <Button Grid.Row="3" Content="طباعة التقرير"
-                Command="{Binding PrintReportCommand}"
-                Style="{StaticResource PrintButtonStyle}"
-                HorizontalAlignment="Center"
-                IsEnabled="{Binding IsLabOrderSelected}"/>
+            Command="{Binding PrintReportCommand}"
+            Style="{StaticResource PrintButtonStyle}"
+            HorizontalAlignment="Center"/>
 
         <!-- مؤشر تحميل يظهر عند تفعيل خاصية IsLoading في الـ ViewModel -->
         <Border Grid.RowSpan="4" Background="#77000000" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" Panel.ZIndex="100">

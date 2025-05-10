@@ -4,22 +4,19 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LABOGRA"
-        xmlns:views="clr-namespace:LABOGRA.Views"  
+        xmlns:views="clr-namespace:LABOGRA.Views.Patients"
         mc:Ignorable="d"
         Title="البرنامج الرئيسي" Height="600" Width="900" WindowStartupLocation="CenterScreen" Background="#EAF2FA">
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200"/>
-            <!-- عمود للشريط الجانبي -->
             <ColumnDefinition Width="*"/>
-            <!-- عمود لمنطقة المحتوى الرئيسي -->
         </Grid.ColumnDefinitions>
 
-        <!-- الشريط الجانبي (Sidebar) -->
+        <!-- الشريط الجانبي -->
         <StackPanel Grid.Column="0" Background="#1E90FF" VerticalAlignment="Stretch" Margin="0">
-            <!-- إضافة مساحة في الأعلى (اختياري) -->
             <Border Height="50"/>
-
             <Button Content="إدارة المرضى" Name="AddPatientsButton" Height="50" Background="#4682B4" Foreground="White" FontSize="16" FontWeight="Bold" Margin="5" Click="AddPatientsButton_Click"/>
             <Button Content="تسجيل النتائج" Name="RecordResultsButton" Height="50" Background="#4682B4" Foreground="White" FontSize="16" FontWeight="Bold" Margin="5" Click="RecordResultsButton_Click"/>
             <Button Content="طباعة النتائج" Name="PrintResultsButton" Height="50" Background="#4682B4" Foreground="White" FontSize="16" FontWeight="Bold" Margin="5" Click="PrintResultsButton_Click"/>
@@ -27,15 +24,9 @@
             <Button Content="الإعدادات" Name="SettingsButton" Height="50" Background="#4682B4" Foreground="White" FontSize="16" FontWeight="Bold" Margin="5" Click="SettingsButton_Click"/>
         </StackPanel>
 
-        <!-- منطقة المحتوى الرئيسي لعرض الـ UserControls -->
-        <!-- Border للإطار والزوايا المستديرة -->
+        <!-- منطقة العرض -->
         <Border Grid.Column="1" Background="White" Margin="0" CornerRadius="10,0,0,10">
-            <!-- ContentControl هو المكان الذي سيتم فيه عرض الـ UserControl الحالي (PatientsView, ResultsView, etc.) -->
             <ContentControl x:Name="MainContentArea" Margin="10"/>
         </Border>
-
-        <!-- تم إزالة الـ TextBlock الترحيبي الافتراضي من هنا لمنع تكرار المحتوى -->
-        <!-- إذا أردت رسالة ترحيب في البداية، يمكن وضعها كـ UserControl وعرضها افتراضياً -->
-
     </Grid>
 </Window>

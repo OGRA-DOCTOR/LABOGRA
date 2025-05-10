@@ -1,0 +1,9 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:vm="clr-namespace:LABOGRA.ViewModels">
+
+    <!-- الكائنات دي مش هتستخدم في البرنامج، بس عشان Visual Studio يعرف إن ViewModels موجودين -->
+    <vm:PatientsViewModel x:Key="FakePatientsViewModel" />
+    <vm:TestsManagementViewModel x:Key="FakeTestsManagementViewModel" />
+
+</ResourceDictionary>
