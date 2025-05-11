@@ -5,7 +5,8 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="DesignHelpers/DummyViewModelReference.xaml" />
+                <!-- إذا كنت تستخدم DummyViewModelReference، احتفظ به أو أزله إذا لم تعد بحاجة إليه -->
+                <!-- <ResourceDictionary Source="DesignHelpers/DummyViewModelReference.xaml" /> -->
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

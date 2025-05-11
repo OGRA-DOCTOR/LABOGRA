@@ -1,0 +1,71 @@
+📁 DesignHelpers
+    📄 DummyViewModelReference.xaml
+📁 Helpers
+    📄 BaseViewModel.cs
+    📄 PasswordBoxAssistant.cs
+    📄 PrintCommand.cs
+    📄 RelayCommand.cs
+    📄 ValidationHelper.cs
+📁 Migrations
+    📄 20250506180303_InitialCreate.cs
+    📄 20250506180303_InitialCreate.Designer.cs
+    📄 20250506195822_AddPatientDetailsAndLabOrderModels.cs
+    📄 20250506195822_AddPatientDetailsAndLabOrderModels.Designer.cs
+    📄 20250507010312_AddUnitTestAndReferenceRange.cs
+    📄 20250507010312_AddUnitTestAndReferenceRange.Designer.cs
+    📄 20250508125939_ApplyRefValueStructureAndData.cs
+    📄 20250508125939_ApplyRefValueStructureAndData.Designer.cs
+    📄 LabDbContextModelSnapshot.cs
+📁 Models
+    📄 LabOrder.cs
+    📄 LabOrderItem.cs
+    📄 Patient.cs
+    📄 ReferringPhysician.cs
+    📄 Test.cs
+    📄 TestReferenceValue.cs
+📁 Properties
+    📄 Settings.Designer.cs
+    📄 Settings.settings
+📁 Services
+    📁 Database
+        📁 Data
+            📄 LabDbContext.cs
+            📄 LabDbContextFactory.cs
+        📄 DatabaseService.cs
+    📄 PatientReportGenerator.cs
+📁 ViewModels
+    📄 LabOrderItemViewModel.cs
+    📄 LoginViewModel.cs
+    📄 PatientsViewModel.cs
+    📄 PrintViewModel.cs
+    📄 ResultsViewModel.cs
+    📄 TestsManagementViewModel.cs
+📁 Views
+    📁 Login
+        📄 LoginView.xaml
+        📄 LoginView.xaml.cs
+    📁 Patients
+        📄 PatientsView.xaml
+        📄 PatientsView.xaml.cs
+    📁 Print
+        📄 PrintView.xaml
+        📄 PrintView.xaml.cs
+    📁 Results
+        📄 ResultsView.xaml
+        📄 ResultsView.xaml.cs
+    📁 TestsManagement
+        📄 TestsManagementView.xaml
+        📄 TestsManagementView.xaml.cs
+📄 .gitattributes
+📄 .gitignore
+📄 App.config
+📄 App.xaml
+📄 App.xaml.cs
+📄 AssemblyInfo.cs
+📄 LABOGRA.csproj
+📄 LABOGRA.sln
+📄 LICENSE
+📄 MainWindow.xaml
+📄 MainWindow.xaml.cs
+📄 ProjectStructure.txt
+📄 README.md

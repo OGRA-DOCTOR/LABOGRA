@@ -6,7 +6,7 @@ namespace LABOGRA.Models
 {
     // هذا هو تعريف كلاس LabOrder (طلب التحاليل المحدد لزيارة معينة لمريض).
     // يربط المريض بمجموعة من التحاليل التي تم طلبها له في وقت معين.
-    public class LabOrder
+    public class LabOrderA
     {
         // المفتاح الأساسي (Primary Key)
         public int Id { get; set; }

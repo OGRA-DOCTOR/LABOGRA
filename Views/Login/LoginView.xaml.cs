@@ -1,68 +1,40 @@
-﻿using System.Collections.Generic;
+﻿// الإصدار 4: LoginView.xaml.cs
+// الوصف: إضافة دالة لسحب النافذة من شريط العنوان المخصص.
+using LABOGRA.ViewModels.Login;
 using System.Windows;
-using System.Windows.Input;
+using System.Windows.Input; // لاستخدام MouseButtonEventArgs
 
 namespace LABOGRA.Views.Login
 {
     public partial class LoginView : Window
     {
-        private Dictionary<string, string> users = new Dictionary<string, string>
-        {
-            { "admin", "0000" },
-            { "user", "0000" }
-        };
+        private readonly LoginViewModel _viewModel;
 
         public LoginView()
         {
             InitializeComponent();
-            LoadUsernames();
 
-            // إضافة معالج حدث لضغط زر Enter
-            this.KeyDown += LoginView_KeyDown;
+            _viewModel = new LoginViewModel(
+                ShowMainWindow,
+                this.Close,
+                () => this.WindowState = WindowState.Minimized,
+                (message, caption, button, icon) => MessageBox.Show(this, message, caption, button, icon)
+            );
+            this.DataContext = _viewModel;
         }
 
-        private void LoadUsernames()
+        private void ShowMainWindow()
         {
-            // تحميل أسماء المستخدمين في القائمة المنسدلة
-            foreach (var username in users.Keys)
-            {
-                UsernameComboBox.Items.Add(username);
-            }
+            var mainWindow = new MainWindow(); // تأكد أن مُنشئ MainWindow لا يتطلب LoginView
+            mainWindow.Show();
         }
 
-        private void LoginButton_Click(object sender, RoutedEventArgs e)
+        // دالة لسحب النافذة عند الضغط على شريط العنوان المخصص
+        private void Window_MouseDown_Drag(object sender, MouseButtonEventArgs e)
         {
-            PerformLogin();
-        }
-
-        private void LoginView_KeyDown(object sender, KeyEventArgs e)
-        {
-            // التحقق إذا كان المستخدم ضغط على زر Enter
-            if (e.Key == Key.Enter)
+            if (e.ChangedButton == MouseButton.Left && e.ButtonState == MouseButtonState.Pressed)
             {
-                PerformLogin();
-            }
-        }
-
-        private void PerformLogin()
-        {
-            string username = UsernameComboBox.Text;
-            string password = PasswordBox.Password;
-
-            // التحقق من صحة بيانات تسجيل الدخول
-            if (users.ContainsKey(username) && users[username] == password)
-            {
-                // إخفاء نافذة تسجيل الدخول بدلاً من إغلاقها
-                this.Hide();
-
-                // فتح النافذة الرئيسية
-                MainWindow mainWindow = new MainWindow(this);
-
-                mainWindow.Show();
-            }
-            else
-            {
-                MessageBox.Show("Invalid username or password.", "Login Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                this.DragMove();
             }
         }
     }
