@@ -1,9 +1,9 @@
-// الإصدار 2: LoginViewModel.cs
-// الوصف: ViewModel الخاص بنافذة تسجيل الدخول، مع تهيئة Usernames وتصحيحات.
+// الإصدار 3: LoginViewModel.cs
+// الوصف: تعديل لجعل اسم المستخدم الافتراضي فارغًا وإزالة وظيفة "Remember Me".
 using LABOGRA.Core; // لاستخدام BaseViewModel و RelayCommand
 using System;
 using System.Collections.ObjectModel;
-using System.Linq; // لاستخدام FirstOrDefault
+// using System.Linq; // لم نعد بحاجة لـ FirstOrDefault هنا بشكل مباشر لـ SelectedUsername الافتراضي
 using System.Windows; // لاستخدام Visibility و MessageBoxButton و MessageBoxImage
 using System.Windows.Input;
 
@@ -16,8 +16,9 @@ namespace LABOGRA.ViewModels.Login
         private readonly Action _minimizeLoginWindowAction;
         private readonly Action<string, string, MessageBoxButton, MessageBoxImage> _showMessageAction;
 
-        private string _selectedUsername = "admin";
-        public string SelectedUsername
+        // تم تغيير القيمة الافتراضية إلى null أو string.Empty لجعل الحقل فارغًا
+        private string? _selectedUsername = null; // أو string.Empty إذا كنت تفضل ذلك
+        public string? SelectedUsername // يمكن أن يكون nullable
         {
             get => _selectedUsername;
             set => SetProperty(ref _selectedUsername, value);
@@ -47,7 +48,7 @@ namespace LABOGRA.ViewModels.Login
                 {
                     if (IsPasswordVisible)
                     {
-                        Password = value; // تزامن مع Password عند تغيير النص الظاهر
+                        Password = value;
                     }
                 }
             }
@@ -63,9 +64,8 @@ namespace LABOGRA.ViewModels.Login
                 {
                     if (_isPasswordVisible)
                     {
-                        VisiblePasswordText = Password; // عرض كلمة المرور المخزنة
+                        VisiblePasswordText = Password;
                     }
-                    // لا حاجة لتغيير Password عند الإخفاء، هي تبقى كما هي في PasswordBox
                     OnPropertyChanged(nameof(PasswordBoxVisibility));
                     OnPropertyChanged(nameof(PasswordTextVisibility));
                 }
@@ -75,12 +75,13 @@ namespace LABOGRA.ViewModels.Login
         public Visibility PasswordBoxVisibility => IsPasswordVisible ? Visibility.Collapsed : Visibility.Visible;
         public Visibility PasswordTextVisibility => IsPasswordVisible ? Visibility.Visible : Visibility.Collapsed;
 
-        private bool _rememberMe;
-        public bool RememberMe
-        {
-            get => _rememberMe;
-            set => SetProperty(ref _rememberMe, value);
-        }
+        // تم إزالة خاصية RememberMe بالكامل
+        // private bool _rememberMe;
+        // public bool RememberMe
+        // {
+        //     get => _rememberMe;
+        //     set => SetProperty(ref _rememberMe, value);
+        // }
 
         public ICommand LoginCommand { get; }
         public ICommand MinimizeCommand { get; }
@@ -97,8 +98,7 @@ namespace LABOGRA.ViewModels.Login
             _minimizeLoginWindowAction = minimizeLoginWindowAction ?? throw new ArgumentNullException(nameof(minimizeLoginWindowAction));
             _showMessageAction = showMessageAction ?? throw new ArgumentNullException(nameof(showMessageAction));
 
-            // Usernames تم تهيئتها عند التصريح
-            // SelectedUsername = Usernames.FirstOrDefault() ?? "admin"; // تم تعيينها كقيمة افتراضية عند التصريح
+            // لا حاجة لتعيين SelectedUsername هنا، سيبقى null أو string.Empty من التعريف
 
             LoginCommand = new RelayCommand(ExecuteLogin, CanExecuteLogin);
             MinimizeCommand = new RelayCommand(ExecuteMinimize);
@@ -107,12 +107,19 @@ namespace LABOGRA.ViewModels.Login
 
         private bool CanExecuteLogin(object? parameter)
         {
+            // يجب أن يتم اختيار اسم مستخدم (ليس فارغًا أو null)
             return !string.IsNullOrWhiteSpace(SelectedUsername);
         }
 
         private void ExecuteLogin(object? parameter)
         {
-            // الحصول على كلمة المرور الصحيحة سواء كانت ظاهرة أو من PasswordBox
+            // التأكد من أن SelectedUsername ليس null قبل استخدامه
+            if (string.IsNullOrWhiteSpace(SelectedUsername))
+            {
+                _showMessageAction.Invoke("الرجاء اختيار اسم مستخدم.", "خطأ في الدخول", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             string currentPasswordToValidate = IsPasswordVisible ? VisiblePasswordText : Password;
 
             if ((SelectedUsername == "admin" || SelectedUsername == "user") && currentPasswordToValidate == "0000")
