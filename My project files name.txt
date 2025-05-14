@@ -15,6 +15,8 @@
     📄 20250507010312_AddUnitTestAndReferenceRange.Designer.cs
     📄 20250508125939_ApplyRefValueStructureAndData.cs
     📄 20250508125939_ApplyRefValueStructureAndData.Designer.cs
+    📄 20250511163559_UpdatePatientSchema.cs
+    📄 20250511163559_UpdatePatientSchema.Designer.cs
     📄 LabDbContextModelSnapshot.cs
 📁 Models
     📄 LabOrder.cs
@@ -39,6 +41,7 @@
     📄 PatientsViewModel.cs
     📄 PrintViewModel.cs
     📄 ResultsViewModel.cs
+    📄 SearchEditViewModel.cs
     📄 TestsManagementViewModel.cs
 📁 Views
     📁 Login
@@ -56,6 +59,10 @@
     📁 TestsManagement
         📄 TestsManagementView.xaml
         📄 TestsManagementView.xaml.cs
+    📄 ReportPreviewWindow.xaml
+    📄 ReportPreviewWindow.xaml.cs
+    📄 SearchEditWindow.xaml
+    📄 SearchEditWindow.xaml.cs
 📄 .gitattributes
 📄 .gitignore
 📄 App.config
@@ -67,5 +74,5 @@
 📄 LICENSE
 📄 MainWindow.xaml
 📄 MainWindow.xaml.cs
-📄 ProjectStructure.txt
+📄 My project files name.txt
 📄 README.md

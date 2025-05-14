@@ -1,12 +1,13 @@
-﻿// الإصدار 3: MainWindow.xaml.cs
-// الوصف: النسخة النهائية (حتى الآن) مع مُنشئ معدل وإعادة فتح LoginView عند الخروج.
+﻿// الإصدار: 6 (لهذا الملف - عرض SearchEditWindow كـ UserControl)
+// اسم الملف: MainWindow.xaml.cs
+// الوصف: الكود الخلفي للنافذة الرئيسية، مع تعديل لعرض SearchEditWindow كـ UserControl.
 using LABOGRA.Views.Patients;
 using LABOGRA.Views.Results;
 using LABOGRA.Views.Print;
 using LABOGRA.Views.TestsManagement;
-// using LABOGRA.Views.Login; // لم نعد بحاجة إليه هنا بشكل مباشر
+using LABOGRA.Views.SearchEdit;
 using System.Windows;
-using System.Windows.Controls; // لاستخدام UserControl
+using LABOGRA.ViewModels; // *** إضافة using للوصول إلى ViewModels ***
 
 namespace LABOGRA
 {
@@ -19,25 +20,40 @@ namespace LABOGRA
         }
 
         private void AddPatientsButton_Click(object sender, RoutedEventArgs e)
-            => MainContentArea.Content = new PatientsView();
+        {
+            MainContentArea.Content = new PatientsView();
+        }
 
         private void RecordResultsButton_Click(object sender, RoutedEventArgs e)
-            => MainContentArea.Content = new ResultsView();
+        {
+            MainContentArea.Content = new ResultsView();
+        }
 
         private void PrintResultsButton_Click(object sender, RoutedEventArgs e)
-            => MainContentArea.Content = new PrintView();
+        {
+            MainContentArea.Content = new PrintView();
+        }
 
         private void SearchEditButton_Click(object sender, RoutedEventArgs e)
-            => MessageBox.Show("وظيفة بحث وتعديل غير مفعلة حاليًا.", "بحث وتعديل", MessageBoxButton.OK, MessageBoxImage.Information);
+        {
+            // *** بداية التعديل هنا ***
+            var searchEditView = new SearchEditWindow();
+            // تعيين الـ DataContext للـ UserControl
+            searchEditView.DataContext = new SearchEditViewModel(); // افترض أن SearchEditViewModel في LABOGRA.ViewModels
+            // عرض الـ UserControl داخل منطقة المحتوى الرئيسية
+            MainContentArea.Content = searchEditView;
+            // *** نهاية التعديل هنا ***
+        }
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
-            => MainContentArea.Content = new TestsManagementView();
+        {
+            MainContentArea.Content = new TestsManagementView();
+        }
 
         private void LogoutButton_Click(object sender, RoutedEventArgs e)
         {
-            this.Close(); // إغلاق النافذة الحالية
+            this.Close();
 
-            // فتح نافذة تسجيل الدخول مرة أخرى
             var loginView = new LABOGRA.Views.Login.LoginView();
             loginView.Show();
         }
