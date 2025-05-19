@@ -1,125 +1,56 @@
-﻿<!-- الإصدار: 8 -->
-<!-- اسم الملف: LABOGRA/Views/Results/ResultsView.xaml -->
-<!-- الوصف: إزالة تعريف DataContext من XAML لحل مشكلة XDG0008. -->
+﻿<!-- ResultsView.xaml - الإصدار المصحح (مرة أخرى، مع تدقيق شديد جداً لبناء الجملة) -->
 <UserControl x:Class="LABOGRA.Views.Results.ResultsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:LABOGRA.Views.Results"
-             xmlns:viewmodels="clr-namespace:LABOGRA.ViewModels"
+             xmlns:viewmodels="clr-namespace:LABOGRA.ViewModels" 
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1000"
-             Background="#EAF2FA"
+             Background="{StaticResource PageBackgroundBrush}"
              FlowDirection="RightToLeft"
              Loaded="ResultsView_Loaded">
 
     <UserControl.Resources>
-        <!-- تعريف الألوان الأساسية -->
-        <SolidColorBrush x:Key="PrimaryBlueBrush" Color="#1E90FF"/>
-        <SolidColorBrush x:Key="PrimaryOrangeBrush" Color="#FF4500"/>
-        <SolidColorBrush x:Key="SuccessGreenBrush" Color="ForestGreen"/>
-        <SolidColorBrush x:Key="UnitTextBrushColor" Color="ForestGreen"/>
-        <SolidColorBrush x:Key="ReferenceRangeTextBrushColor" Color="MediumPurple"/>
-        <SolidColorBrush x:Key="LightBlueBackgroundBrush" Color="#D6EAF8"/>
-        <SolidColorBrush x:Key="DarkTextBrush" Color="#2C3E50"/>
-        <SolidColorBrush x:Key="HeaderTextBrush" Color="White"/>
-        <SolidColorBrush x:Key="ListItemAlternateBackgroundBrush" Color="#F0F8FF"/>
-        <SolidColorBrush x:Key="BorderBrush" Color="#A9CCE3"/>
-        <SolidColorBrush x:Key="SelectedItemBackgroundBrush" Color="#AED6F1"/>
-        <SolidColorBrush x:Key="SelectedItemTextBrush" Color="{Binding Source={StaticResource DarkTextBrush}, Path=Color}"/>
-
-        <!-- أنماط الخطوط والأدوات -->
-        <Style TargetType="TextBlock" x:Key="LargeLabelTextStyle">
-            <Setter Property="FontSize" Value="18"/>
+        <Style x:Key="ResultsBaseHeaderStyle" TargetType="GridViewColumnHeader">
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="{StaticResource DarkTextBrush}"/>
-        </Style>
-        <Style TargetType="ComboBox" x:Key="LargeComboBoxStyle">
-            <Setter Property="FontSize" Value="17"/>
-            <Setter Property="MinWidth" Value="380"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
-            <Setter Property="Padding" Value="6"/>
-        </Style>
-        <Style x:Key="BaseHeaderStyle" TargetType="GridViewColumnHeader">
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="{StaticResource HeaderTextBrush}"/>
-            <Setter Property="Padding" Value="10,8"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
-        </Style>
-        <Style x:Key="TestNameHeaderStyle" TargetType="GridViewColumnHeader" BasedOn="{StaticResource BaseHeaderStyle}">
-            <Setter Property="Background" Value="{StaticResource PrimaryBlueBrush}"/>
-        </Style>
-        <Style x:Key="ResultHeaderStyle" TargetType="GridViewColumnHeader" BasedOn="{StaticResource BaseHeaderStyle}">
-            <Setter Property="Background" Value="{StaticResource PrimaryOrangeBrush}"/>
-        </Style>
-        <Style x:Key="UnitHeaderStyle" TargetType="GridViewColumnHeader" BasedOn="{StaticResource BaseHeaderStyle}">
-            <Setter Property="Background" Value="{StaticResource UnitTextBrushColor}"/>
-        </Style>
-        <Style x:Key="ReferenceRangeHeaderStyle" TargetType="GridViewColumnHeader" BasedOn="{StaticResource BaseHeaderStyle}">
-            <Setter Property="Background" Value="{StaticResource ReferenceRangeTextBrushColor}"/>
-        </Style>
-        <Style x:Key="SaveHeaderStyle" TargetType="GridViewColumnHeader" BasedOn="{StaticResource BaseHeaderStyle}">
-            <Setter Property="Background" Value="{StaticResource PrimaryOrangeBrush}"/>
-        </Style>
-        <Style TargetType="TextBlock" x:Key="ListItemTextStyle">
-            <Setter Property="FontSize" Value="15"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Foreground" Value="{StaticResource DarkTextBrush}"/>
-        </Style>
-        <Style TargetType="TextBox" x:Key="ListItemTextBoxStyle">
-            <Setter Property="FontSize" Value="15"/>
-            <Setter Property="MinWidth" Value="130"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
-            <Setter Property="Padding" Value="6"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-        </Style>
-        <Style TargetType="Button" x:Key="SaveButtonStyle">
-            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="Foreground" Value="{StaticResource TextOnPrimaryBrush}"/>
             <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="MinWidth" Value="75"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="buttonBorder"
-                                Background="{StaticResource PrimaryOrangeBrush}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="3">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <DataTrigger Binding="{Binding IsSavedSuccessfully}" Value="True">
-                                <Setter TargetName="buttonBorder" Property="Background" Value="{StaticResource SuccessGreenBrush}"/>
-                            </DataTrigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="buttonBorder" Property="Opacity" Value="0.9"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="buttonBorder" Property="Opacity" Value="0.7"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="buttonBorder" Property="Background" Value="LightGray"/>
-                                <Setter Property="Foreground" Value="DarkGray"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect ShadowDepth="2" BlurRadius="4" Opacity="0.3" Color="Black"/>
-                </Setter.Value>
-            </Setter>
         </Style>
+
+        <Style x:Key="ResultsTestNameHeaderStyle" TargetType="GridViewColumnHeader" BasedOn="{StaticResource ResultsBaseHeaderStyle}">
+            <Setter Property="Background" Value="{StaticResource PrimaryHueMidBrush}"/>
+        </Style>
+        <Style x:Key="ResultsResultHeaderStyle" TargetType="GridViewColumnHeader" BasedOn="{StaticResource ResultsBaseHeaderStyle}">
+            <Setter Property="Background" Value="{StaticResource AccentHueMidBrush}"/>
+        </Style>
+        <Style x:Key="ResultsUnitHeaderStyle" TargetType="GridViewColumnHeader" BasedOn="{StaticResource ResultsBaseHeaderStyle}">
+            <Setter Property="Background" Value="{StaticResource SecondaryHueMidBrush}"/>
+        </Style>
+        <Style x:Key="ResultsReferenceRangeHeaderStyle" TargetType="GridViewColumnHeader" BasedOn="{StaticResource ResultsBaseHeaderStyle}">
+            <Setter Property="Background" Value="{StaticResource PrimaryHueLightBrush}"/>
+        </Style>
+        <Style x:Key="ResultsSaveHeaderStyle" TargetType="GridViewColumnHeader" BasedOn="{StaticResource ResultsBaseHeaderStyle}">
+            <Setter Property="Background" Value="{StaticResource AccentHueDarkBrush}"/>
+        </Style>
+
+        <Style x:Key="ResultsItemSaveButtonStyle" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
+            <Setter Property="MinWidth" Value="75"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Background" Value="{StaticResource AccentHueMidBrush}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSavedSuccessfully}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource SuccessBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ResultsListViewItemStyle" TargetType="ListViewItem" BasedOn="{StaticResource GlobalListViewItemStyle}"/>
+
     </UserControl.Resources>
 
     <Grid Margin="20">
@@ -130,107 +61,99 @@
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Row="0" Text="تسجيل النتائج" FontSize="30" FontWeight="ExtraBold"
-                   Foreground="{StaticResource PrimaryBlueBrush}"
+                   Foreground="{StaticResource PrimaryHueDarkBrush}"
                    HorizontalAlignment="Center" Margin="0,0,0,25"/>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,20" HorizontalAlignment="Right">
             <ComboBox ItemsSource="{Binding PatientList}"
                       SelectedItem="{Binding SelectedPatient}"
                       DisplayMemberPath="Name"
-                      Style="{StaticResource LargeComboBoxStyle}"
+                      Style="{StaticResource GlobalComboBoxStyle}"
+                      MinWidth="380" FontSize="17" Padding="6"
                       IsEnabled="{Binding IsPatientSelectionEnabled}" FlowDirection="RightToLeft">
                 <ComboBox.ToolTip>
                     <TextBlock Text="اختر المريض لعرض تحاليله وإدخال النتائج"/>
                 </ComboBox.ToolTip>
             </ComboBox>
-            <TextBlock Text=":اختر المريض" VerticalAlignment="Center" Margin="0,0,10,0" Style="{StaticResource LargeLabelTextStyle}"/>
+            <TextBlock Text=":اختر المريض" VerticalAlignment="Center" Margin="0,0,10,0" 
+                       Style="{StaticResource GlobalLabelStyle}" FontSize="18"/>
         </StackPanel>
 
-        <Border Grid.Row="2" BorderBrush="{StaticResource PrimaryBlueBrush}" BorderThickness="2" CornerRadius="8" Padding="1" Background="White">
+        <Border Grid.Row="2" BorderBrush="{StaticResource PrimaryHueMidBrush}" BorderThickness="2" CornerRadius="8" Padding="1" Background="{StaticResource ControlBackgroundBrush}">
             <ListView x:Name="ResultsListView"
                       ItemsSource="{Binding LabOrderItems}"
-                      HorizontalContentAlignment="Stretch"
-                      FlowDirection="LeftToRight"
-                      AlternationCount="2"
+                      ItemContainerStyle="{StaticResource ResultsListViewItemStyle}" 
+                      FlowDirection="LeftToRight" 
+                      AlternationCount="2" 
+                      BorderThickness="0"
+                      Background="Transparent"
                       ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                       PreviewKeyDown="ResultsListView_PreviewKeyDown">
-                <ListView.ItemContainerStyle>
-                    <Style TargetType="ListViewItem">
-                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                        <Setter Property="Padding" Value="5,10"/>
-                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                        <Setter Property="BorderBrush" Value="{StaticResource LightBlueBackgroundBrush}"/>
-                        <Style.Triggers>
-                            <Trigger Property="ItemsControl.AlternationIndex" Value="1">
-                                <Setter Property="Background" Value="{StaticResource ListItemAlternateBackgroundBrush}"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{StaticResource LightBlueBackgroundBrush}"/>
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="{StaticResource SelectedItemBackgroundBrush}"/>
-                                <!-- <Setter Property="Foreground" Value="{StaticResource SelectedItemTextBrush}"/> -->
-                                <Setter Property="BorderBrush" Value="{StaticResource PrimaryBlueBrush}"/>
-                                <Setter Property="BorderThickness" Value="0,0,0,1.5"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </ListView.ItemContainerStyle>
                 <ListView.View>
                     <GridView AllowsColumnReorder="False">
-                        <GridViewColumn Header="Test Name" Width="300" HeaderContainerStyle="{StaticResource TestNameHeaderStyle}">
+                        <GridViewColumn Header="Test Name" Width="300" HeaderContainerStyle="{StaticResource ResultsTestNameHeaderStyle}">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock TextWrapping="Wrap" Style="{StaticResource ListItemTextStyle}"
-                                               Foreground="{StaticResource PrimaryBlueBrush}">
+                                    <TextBlock TextWrapping="Wrap" Style="{StaticResource GlobalLabelStyle}" FontSize="14" Margin="5,0"
+                                               Foreground="{StaticResource PrimaryHueMidBrush}">
                                           <Run Text="{Binding TestName, Mode=OneWay}" FontWeight="Bold"/>
-                                          <Run Text="{Binding TestAbbreviation, Mode=OneWay, StringFormat= ({0})}" Foreground="DarkSlateGray"/>
+                                          <Run Text="{Binding TestAbbreviation, Mode=OneWay, StringFormat=' ({0})'}" Foreground="{StaticResource SecondaryTextBrush}"/>
                                     </TextBlock>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
 
-                        <GridViewColumn Header="Result" Width="190" HeaderContainerStyle="{StaticResource ResultHeaderStyle}">
+                        <GridViewColumn Header="Result" Width="190" HeaderContainerStyle="{StaticResource ResultsResultHeaderStyle}">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBox x:Name="ResultTextBox"
                                              Text="{Binding ResultValue, UpdateSourceTrigger=PropertyChanged}"
-                                             Style="{StaticResource ListItemTextBoxStyle}"
-                                             Foreground="{StaticResource PrimaryOrangeBrush}"/>
+                                             Style="{StaticResource GlobalTextBoxStyle}"
+                                             MinWidth="130" FontSize="14" FontWeight="SemiBold" Padding="5,2" Margin="2"
+                                             Foreground="{StaticResource AccentHueDarkBrush}"/>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
 
-                        <GridViewColumn Header="Unit" Width="120" HeaderContainerStyle="{StaticResource UnitHeaderStyle}">
+                        <GridViewColumn Header="Unit" Width="120" HeaderContainerStyle="{StaticResource ResultsUnitHeaderStyle}">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Unit, Mode=OneWay}" Style="{StaticResource ListItemTextStyle}"
-                                               Foreground="{StaticResource UnitTextBrushColor}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding Unit, Mode=OneWay}" Style="{StaticResource GlobalLabelStyle}" FontSize="14" Margin="5,0"
+                                               Foreground="{StaticResource SecondaryHueDarkBrush}" FontWeight="SemiBold"/>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
 
-                        <GridViewColumn Header="Reference Range" Width="230" HeaderContainerStyle="{StaticResource ReferenceRangeHeaderStyle}">
+                        <GridViewColumn Header="Reference Range" Width="230" HeaderContainerStyle="{StaticResource ResultsReferenceRangeHeaderStyle}">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding DisplayReferenceRange, Mode=OneWay}" TextWrapping="Wrap" Style="{StaticResource ListItemTextStyle}"
-                                               Foreground="{StaticResource ReferenceRangeTextBrushColor}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding DisplayReferenceRange, Mode=OneWay}" TextWrapping="Wrap" 
+                                               Style="{StaticResource GlobalLabelStyle}" FontSize="14" Margin="5,0"
+                                               Foreground="{StaticResource PrimaryTextBrush}" FontWeight="SemiBold"/>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
 
-                        <GridViewColumn Header="Save" Width="110" HeaderContainerStyle="{StaticResource SaveHeaderStyle}">
+                        <GridViewColumn Header="Save" Width="110" HeaderContainerStyle="{StaticResource ResultsSaveHeaderStyle}">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <Button Content="Save"
                                             Command="{Binding SaveResultCommand}"
-                                            Style="{StaticResource SaveButtonStyle}"/>
+                                            Style="{StaticResource ResultsItemSaveButtonStyle}"/>
                                 </DataTemplate>
+                                <!-- تم التأكد من إغلاق DataTemplate هنا -->
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
+                        <!-- تم التأكد من إغلاق GridViewColumn هنا -->
                     </GridView>
+                    <!-- تم التأكد من إغلاق GridView هنا -->
                 </ListView.View>
+                <!-- تم التأكد من إغلاق ListView.View هنا -->
             </ListView>
+            <!-- تم التأكد من إغلاق ListView هنا -->
         </Border>
+        <!-- تم التأكد من إغلاق Border هنا -->
     </Grid>
+    <!-- تم التأكد من إغلاق Grid الرئيسي هنا -->
 </UserControl>
+<!-- تم التأكد من إغلاق UserControl هنا -->

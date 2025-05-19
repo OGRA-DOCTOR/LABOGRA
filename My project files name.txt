@@ -17,6 +17,8 @@
     📄 20250508125939_ApplyRefValueStructureAndData.Designer.cs
     📄 20250511163559_UpdatePatientSchema.cs
     📄 20250511163559_UpdatePatientSchema.Designer.cs
+    📄 20250514074234_AddGeneratedIdColumnToPatientTable.cs
+    📄 20250514074234_AddGeneratedIdColumnToPatientTable.Designer.cs
     📄 LabDbContextModelSnapshot.cs
 📁 Models
     📄 LabOrder.cs
@@ -42,6 +44,7 @@
     📄 PrintViewModel.cs
     📄 ResultsViewModel.cs
     📄 SearchEditViewModel.cs
+    📄 SettingsMenuViewModel.cs
     📄 TestsManagementViewModel.cs
 📁 Views
     📁 Login
@@ -53,16 +56,20 @@
     📁 Print
         📄 PrintView.xaml
         📄 PrintView.xaml.cs
+        📄 ReportPreviewWindow.xaml
+        📄 ReportPreviewWindow.xaml.cs
     📁 Results
         📄 ResultsView.xaml
         📄 ResultsView.xaml.cs
+    📁 SearchEdit
+        📄 SearchEditWindow.xaml
+        📄 SearchEditWindow.xaml.cs
+    📁 Settings
+        📄 SettingsMenuView.xaml
+        📄 SettingsMenuView.xaml.cs
     📁 TestsManagement
         📄 TestsManagementView.xaml
         📄 TestsManagementView.xaml.cs
-    📄 ReportPreviewWindow.xaml
-    📄 ReportPreviewWindow.xaml.cs
-    📄 SearchEditWindow.xaml
-    📄 SearchEditWindow.xaml.cs
 📄 .gitattributes
 📄 .gitignore
 📄 App.config

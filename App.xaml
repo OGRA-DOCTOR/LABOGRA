@@ -1,16 +1,20 @@
-﻿<!-- الإصدار: 3 (لهذا الملف - محاولة تصحيح أخطاء XAML) -->
+﻿<!-- الإصدار: 6 (لهذا الملف - تصحيح موضع BooleanToVisibilityConverter) -->
 <!-- اسم الملف: App.xaml -->
-<!-- الوصف: ملف تعريف التطبيق الرئيسي، مع إضافة محول BooleanToVisibilityConverter. -->
 <Application x:Class="LABOGRA.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:LABOGRA"
              StartupUri="Views/Login/LoginView.xaml">
     <Application.Resources>
         <ResourceDictionary>
+            <!-- تعريف الموارد المباشرة للتطبيق (مثل Converters) يجب أن يكون هنا -->
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
 
+            <!-- ثم يتم دمج القواميس الأخرى -->
             <ResourceDictionary.MergedDictionaries>
-                <!-- إذا كنت تستخدم DummyViewModelReference، احتفظ به أو أزله إذا لم تعد بحاجة إليه -->
+                <ResourceDictionary Source="Resources/SharedResources.xaml"/>
+
+                <!-- إذا كنت تستخدم DummyViewModelReference، تأكد أنه قاموس موارد صحيح -->
                 <!-- <ResourceDictionary Source="DesignHelpers/DummyViewModelReference.xaml" /> -->
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

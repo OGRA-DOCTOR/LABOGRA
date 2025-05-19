@@ -1,78 +1,19 @@
-﻿<UserControl x:Class="LABOGRA.Views.Print.PrintView"
-xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-xmlns:local="clr-namespace:LABOGRA.Views.Print"
-xmlns:viewmodels="clr-namespace:LABOGRA.ViewModels"
-mc:Ignorable="d"
-d:DesignHeight="600" d:DesignWidth="900"
-Background="#EAF2FA"
-FlowDirection="RightToLeft">
+﻿<!-- PrintView.xaml - الإصدار المصحح (محاولة دقيقة جداً جداً) لتطبيق الموارد المركزية وتجنب أخطاء البناء -->
+<UserControl x:Class="LABOGRA.Views.Print.PrintView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:LABOGRA.Views.Print"
+             xmlns:viewmodels="clr-namespace:LABOGRA.ViewModels"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="900"
+             Background="{StaticResource PageBackgroundBrush}"
+             FlowDirection="RightToLeft">
 
     <UserControl.Resources>
-        <!-- تعريف الألوان الأساسية -->
-        <SolidColorBrush x:Key="PrimaryBlueBrush" Color="#1E90FF"/>
-        <SolidColorBrush x:Key="PrimaryOrangeBrush" Color="#FF4500"/>
-        <SolidColorBrush x:Key="DarkTextBrush" Color="#2C3E50"/>
-
-        <!-- أنماط عناصر الواجهة -->
-        <Style TargetType="TextBlock" x:Key="LabelTextStyle">
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="{StaticResource DarkTextBrush}"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Margin" Value="0,0,10,0"/>
-        </Style>
-        <Style TargetType="ComboBox" x:Key="ComboBoxStyle">
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="MinWidth" Value="250"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Padding" Value="4"/>
-            <Setter Property="BorderBrush" Value="#A9CCE3"/>
-            <Setter Property="Background" Value="White"/>
-        </Style>
-        <Style TargetType="Button" x:Key="PrintButtonStyle">
-            <Setter Property="Padding" Value="15,8"/>
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Background" Value="{StaticResource PrimaryOrangeBrush}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="5">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect ShadowDepth="3" BlurRadius="6" Opacity="0.4" Color="Black"/>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#FF7F50"/>
-                    <!-- لون برتقالي أفتح قليلا عند المرور بالفأرة -->
-                </Trigger>
-                <Trigger Property="IsEnabled" Value="False">
-                    <Setter Property="Background" Value="LightGray"/>
-                    <Setter Property="Foreground" Value="DarkGray"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <!-- DataTemplate لعرض عناصر LabOrder في الـ ComboBox -->
-        <!-- لعرض تاريخ ووقت الطلب ومعرفه (ID) -->
         <DataTemplate x:Key="LabOrderComboBoxTemplate">
-            <TextBlock FlowDirection="LeftToRight">
+            <TextBlock FlowDirection="LeftToRight" Foreground="{StaticResource PrimaryTextBrush}">
                 <TextBlock.Text>
                     <MultiBinding StringFormat="{}{0:yyyy-MM-dd HH:mm} (ID: {1})">
                         <Binding Path="RegistrationDateTime"/>
@@ -81,74 +22,57 @@ FlowDirection="RightToLeft">
                 </TextBlock.Text>
             </TextBlock>
         </DataTemplate>
-
-        <!-- محول (Converter) لتحويل قيمة Boolean إلى Visibility (مطلوب لمؤشر التحميل) -->
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-
+        <!-- BooleanToVisibilityConverter يفترض أنه معرف في App.xaml أو SharedResources.xaml -->
     </UserControl.Resources>
 
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <!-- العنوان -->
             <RowDefinition Height="Auto"/>
-            <!-- اختيار المريض وطلب التحليل -->
             <RowDefinition Height="*"/>
-            <!-- مساحة فارغة أو منطقة لعرض تفاصيل الطلب (اختياري) -->
             <RowDefinition Height="Auto"/>
-            <!-- زر الطباعة -->
         </Grid.RowDefinitions>
 
-        <!-- العنوان الرئيسي للواجهة -->
         <TextBlock Grid.Row="0" Text="طباعة النتائج"
-               FontSize="30" FontWeight="ExtraBold"
-               Foreground="{StaticResource PrimaryBlueBrush}"
-               HorizontalAlignment="Center" Margin="0,0,0,25"/>
+                   FontSize="30" FontWeight="ExtraBold"
+                   Foreground="{StaticResource PrimaryHueDarkBrush}"
+                   HorizontalAlignment="Center" Margin="0,0,0,25"/>
 
-        <!-- StackPanel لاحتواء عناصر اختيار المريض وطلب التحليل -->
         <StackPanel Grid.Row="1" Orientation="Vertical" HorizontalAlignment="Center" Margin="0,0,0,20">
-            <!-- اختيار المريض -->
             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                <TextBlock Text="اختر المريض:" Style="{StaticResource LabelTextStyle}"/>
-                <!-- ComboBox لربطه بقائمة المرضى وتحديد المريض المختار -->
+                <TextBlock Text="اختر المريض:" Style="{StaticResource GlobalLabelStyle}"/>
                 <ComboBox ItemsSource="{Binding PatientList}"
-                      SelectedItem="{Binding SelectedPatient}"
-                      DisplayMemberPath="Name"
-                      Style="{StaticResource ComboBoxStyle}"/>
+                          SelectedItem="{Binding SelectedPatient}"
+                          DisplayMemberPath="Name"
+                          Style="{StaticResource GlobalComboBoxStyle}"
+                          MinWidth="250"/>
             </StackPanel>
 
-            <!-- اختيار طلب التحليل للمريض المختار -->
             <StackPanel Orientation="Horizontal">
-                <TextBlock Text="اختر طلب التحليل:" Style="{StaticResource LabelTextStyle}"/>
-                <!-- ComboBox لربطه بقائمة طلبات التحاليل للمريض المختار -->
-                <!-- ItemTemplate يستخدم لعرض تفاصيل الطلب بشكل محدد -->
-                <!-- IsEnabled يربط بالخاصية IsPatientSelected لتفعيله فقط عند اختيار مريض -->
+                <TextBlock Text="اختر طلب التحليل:" Style="{StaticResource GlobalLabelStyle}"/>
                 <ComboBox ItemsSource="{Binding PatientLabOrders}"
-                      SelectedItem="{Binding SelectedLabOrder}"
-                      ItemTemplate="{StaticResource LabOrderComboBoxTemplate}"
-                      Style="{StaticResource ComboBoxStyle}"
-                      IsEnabled="{Binding IsPatientSelected}"/>
+                          SelectedItem="{Binding SelectedLabOrder}"
+                          ItemTemplate="{StaticResource LabOrderComboBoxTemplate}"
+                          Style="{StaticResource GlobalComboBoxStyle}"
+                          MinWidth="250"
+                          IsEnabled="{Binding IsPatientSelected}"/>
             </StackPanel>
         </StackPanel>
 
-        <!-- يمكن إضافة منطقة لتفاصيل عناصر الطلب المختار هنا -->
         <Grid Grid.Row="2"/>
 
-        <!-- زر طباعة التقرير -->
-        <!-- Command يربط بأمر PrintReportCommand في الـ ViewModel -->
-        <!-- IsEnabled يربط بالخاصية IsLabOrderSelected لتفعيله فقط عند اختيار طلب تحليل -->
         <Button Grid.Row="3" Content="طباعة التقرير"
-            Command="{Binding PrintReportCommand}"
-            Style="{StaticResource PrintButtonStyle}"
-            HorizontalAlignment="Center"/>
+                Command="{Binding PrintReportCommand}"
+                Style="{StaticResource AccentActionButtonStyle}"
+                HorizontalAlignment="Center"/>
 
-        <!-- مؤشر تحميل يظهر عند تفعيل خاصية IsLoading في الـ ViewModel -->
-        <Border Grid.RowSpan="4" Background="#77000000" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" Panel.ZIndex="100">
+        <Border Grid.RowSpan="4" Background="#77000000" 
+                Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" 
+                Panel.ZIndex="100">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Text="جاري إنشاء التقرير..." Foreground="White" FontSize="20" FontWeight="Bold"/>
+                <TextBlock Text="جاري إنشاء التقرير..." Foreground="{StaticResource TextOnPrimaryBrush}" FontSize="20" FontWeight="Bold"/>
                 <ProgressBar IsIndeterminate="True" Width="200" Height="15" Margin="0,10,0,0"/>
             </StackPanel>
         </Border>
-
     </Grid>
 </UserControl>
