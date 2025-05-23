@@ -13,20 +13,29 @@ namespace LABOGRA.Services.Database.Data
         public DbSet<ReferringPhysician> ReferringPhysicians { get; set; } = null!;
         public DbSet<Test> Tests { get; set; } = null!;
         public DbSet<TestReferenceValue> TestReferenceValues { get; set; } = null!;
-        // السطر التالي هو الذي تم تعديله
-        public DbSet<LabOrderA> LabOrders { get; set; } = null!; // كان LabOrder وأصبح LabOrderA
+        public DbSet<LabOrderA> LabOrders { get; set; } = null!;
         public DbSet<LabOrderItem> LabOrderItems { get; set; } = null!;
+
+        // إضافة جدول المستخدمين - هذا السطر مهم جداً
+        public DbSet<User> Users { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            // يمكنك إضافة أي تكوينات Fluent API هنا إذا لزم الأمر
-            // مثال: تعريف العلاقات المعقدة أو المفاتيح المركبة
 
-            // مثال لضمان أن اسم الجدول هو "LabOrders" حتى لو كان اسم الكلاس LabOrderA
-            // modelBuilder.Entity<LabOrderA>().ToTable("LabOrders");
-            // إذا لم تقم بذلك، قد يحاول EF Core تسمية الجدول "LabOrderAs"
-            // تأكد من أن اسم الجدول في قاعدة البيانات الفعلية يتطابق.
+            // تأكد من اسم جدول LabOrders
+            modelBuilder.Entity<LabOrderA>().ToTable("LabOrders");
+
+            // إضافة مستخدم افتراضي
+            modelBuilder.Entity<User>().HasData(
+                new User
+                {
+                    Id = 1,
+                    Username = "admin",
+                    PasswordHash = "0000", // في الواقع يجب تشفيرها، لكن للبساطة نتركها كما هي
+                    Role = "Admin"
+                }
+            );
         }
     }
 }

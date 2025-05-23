@@ -1,31 +1,21 @@
-﻿// الإصدار: 1 (لهذا الملف)
-// اسم الملف: SettingsMenuViewModel.cs
-// الوصف: ViewModel لقائمة خيارات الإعدادات.
+﻿// SettingsMenuViewModel.cs - تفعيل التنقل إلى UsersManagementViewModel
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
-using System.Windows; // لاستخدام MessageBox مؤقتاً
-using LABOGRA.ViewModels; // لتضمين ViewModels الأخرى
+using System.Windows;
+// using LABOGRA.ViewModels; // غير ضروري لأننا داخل نفس الـ namespace
 
 namespace LABOGRA.ViewModels
 {
-    // لا يوجد مجلد فرعي ViewModels/Settings، الفئة مباشرة تحت ViewModels
-
     public partial class SettingsMenuViewModel : ObservableObject
     {
-        // حدث لإخبار الـ View (أو أي مشترك آخر) بنوع الـ ViewModel الذي يجب عرضه
         public event EventHandler<Type>? RequestNavigate;
 
-        // قائمة بخيارات الإعدادات التي ستظهر للمستخدم
         public List<string> SettingsOptions { get; } = new List<string>
         {
             "إدارة أنواع التحاليل",
-            // أضف خيارات إعدادات أخرى هنا لاحقاً
-            // "إدارة المستخدمين",
-            // "إدارة التقارير",
-            // "إعدادات الطباعة",
-            // ...
+            "إدارة المستخدمين"
         };
 
         [RelayCommand]
@@ -38,37 +28,30 @@ namespace LABOGRA.ViewModels
 
             Type? targetViewModelType = null;
 
-            // تحديد نوع الـ ViewModel المطلوب بناءً على اسم الخيار المحدد
             switch (settingName)
             {
                 case "إدارة أنواع التحاليل":
                     targetViewModelType = typeof(TestsManagementViewModel);
                     break;
+                case "إدارة المستخدمين":
+                    targetViewModelType = typeof(UsersManagementViewModel); // تم تفعيل هذا السطر
+                    break;
                     // أضف هنا حالات أخرى لخيارات الإعدادات المستقبلية
-                    // case "إدارة المستخدمين":
-                    //     targetViewModelType = typeof(UsersManagementViewModel); // افترض وجود UsersManagementViewModel
-                    //     break;
-                    // case "إدارة التقارير":
-                    //     targetViewModelType = typeof(ReportsSettingsViewModel); // افترض وجود ReportsSettingsViewModel
-                    //     break;
-                    // ...
             }
 
-            // إذا تم تحديد نوع ViewModel مستهدف، قم بإطلاق الحدث
             if (targetViewModelType != null)
             {
                 RequestNavigate?.Invoke(this, targetViewModelType);
             }
             else
             {
-                // رسالة خطأ إذا كان الخيار غير معروف (للتطوير)
-                MessageBox.Show($"الخيار '{settingName}' غير مدعوم حالياً.", "خطأ في التنقل", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"الخيار '{settingName}' غير مدعوم حالياً أو لم يتم تحديد ViewModel له.", "خطأ في التنقل", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
         public SettingsMenuViewModel()
         {
-            // يمكن هنا تحميل الخيارات ديناميكياً إذا لزم الأمر، لكن حالياً هي ثابتة.
+            // لا تغييرات هنا
         }
     }
 }

@@ -27,9 +27,12 @@
     📄 ReferringPhysician.cs
     📄 Test.cs
     📄 TestReferenceValue.cs
+    📄 User.cs
 📁 Properties
     📄 Settings.Designer.cs
     📄 Settings.settings
+📁 Resources
+    📄 SharedResources.xaml
 📁 Services
     📁 Database
         📁 Data
@@ -46,6 +49,7 @@
     📄 SearchEditViewModel.cs
     📄 SettingsMenuViewModel.cs
     📄 TestsManagementViewModel.cs
+    📄 UsersManagementViewModel.cs
 📁 Views
     📁 Login
         📄 LoginView.xaml
@@ -70,6 +74,9 @@
     📁 TestsManagement
         📄 TestsManagementView.xaml
         📄 TestsManagementView.xaml.cs
+    📁 UsersManagement
+        📄 UsersManagementView.xaml
+        📄 UsersManagementView.xaml.cs
 📄 .gitattributes
 📄 .gitignore
 📄 App.config

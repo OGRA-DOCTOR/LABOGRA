@@ -1,4 +1,4 @@
-﻿<!-- ReportPreviewWindow.xaml - Updated to use SharedResources.xaml -->
+﻿<!-- ReportPreviewWindow.xaml - إزالة Medical Record # نهائيًا وإعادة ترتيب بيانات المريض -->
 <Window x:Class="LABOGRA.Views.Print.ReportPreviewWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -6,35 +6,49 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LABOGRA.Views.Print"
         mc:Ignorable="d"
-        Title="Patient Report Preview" Height="750" Width="800"
+        Title="Patient Report Preview" Height="800" Width="850"
         WindowStartupLocation="CenterScreen"
-        FlowDirection="RightToLeft"
+        FlowDirection="LeftToRight" 
         Background="{StaticResource PageBackgroundBrush}">
-    <!-- استخدام لون الخلفية العام -->
 
     <Window.Resources>
-        <!-- 
-            تم نقل الأنماط المشابهة إلى SharedResources.xaml.
-            سنقوم بتكييف الأنماط المتبقية أو استخدام الأنماط العامة.
-        -->
-        <Style x:Key="ReportHeaderTextStyle" TargetType="TextBlock" BasedOn="{StaticResource GlobalLabelStyle}">
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Margin" Value="0,3,0,3"/>
-        </Style>
-        <Style x:Key="ReportValueTextStyle" TargetType="TextBlock" BasedOn="{StaticResource GlobalLabelStyle}">
-            <Setter Property="Margin" Value="0,3,5,3"/>
-            <Setter Property="MinWidth" Value="120"/>
-            <Setter Property="FlowDirection" Value="LeftToRight"/>
-            <!-- يبقى هذا التخصيص إذا كان ضروريًا -->
-            <Setter Property="Foreground" Value="{StaticResource SecondaryTextBrush}"/>
-            <!-- استخدام لون نص ثانوي للقيم -->
+        <Style x:Key="ReportMainHeaderStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="FontWeight" Value="ExtraBold"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,10,0,20"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryHueDarkBrush}"/>
         </Style>
 
-        <!-- نمط خاص لأزرار الإجراءات في هذه النافذة، يرث من النمط الأساسي -->
+        <Style x:Key="ReportSectionHeaderStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,15,0,8"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
+        </Style>
+
+        <Style x:Key="PatientInfoLabelStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,4,10,4"/>
+            <!-- تعديل الهامش العمودي قليلاً -->
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
+        </Style>
+        <Style x:Key="PatientInfoValueStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Margin" Value="0,4,0,4"/>
+            <!-- تعديل الهامش العمودي قليلاً -->
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Foreground" Value="{StaticResource SecondaryTextBrush}"/>
+        </Style>
+
         <Style x:Key="ReportActionButtonStyle" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
             <Setter Property="Padding" Value="15,8"/>
-            <Setter Property="MinWidth" Value="120"/>
+            <Setter Property="MinWidth" Value="130"/>
             <Setter Property="Margin" Value="10,0"/>
+            <Setter Property="FontSize" Value="14"/>
         </Style>
     </Window.Resources>
 
@@ -48,60 +62,67 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Patient Lab Results Report" FontSize="22" FontWeight="Bold" 
-                   HorizontalAlignment="Center" Margin="0,0,0,15"
-                   Foreground="{StaticResource PrimaryHueDarkBrush}"/>
+        <TextBlock Grid.Row="0" Text="LAB REPORT" Style="{StaticResource ReportMainHeaderStyle}" FontFamily="Arial Black"/>
 
-        <Border Grid.Row="1" BorderBrush="{StaticResource DefaultBorderBrush}" BorderThickness="1" Padding="15" Margin="0,0,0,15"
-                Background="{StaticResource ControlBackgroundBrush}">
+        <Border Grid.Row="1" BorderBrush="{StaticResource DefaultBorderBrush}" BorderThickness="0,0,0,1" Padding="0,5,0,10" Margin="0,0,0,15">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="30"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
+                    <!-- السطر الأول: Name | Gender/Age -->
                     <RowDefinition Height="Auto"/>
+                    <!-- السطر الثاني: Lab ID | Referred by -->
                     <RowDefinition Height="Auto"/>
+                    <!-- السطر الثالث: Requested on | Printed on -->
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Grid.Column="2" Text="ID:" Style="{StaticResource ReportHeaderTextStyle}" HorizontalAlignment="Left"/>
-                <TextBlock Grid.Row="0" Grid.Column="3" x:Name="PatientGeneratedIdTextBlock" Style="{StaticResource ReportValueTextStyle}" HorizontalAlignment="Right"/>
+                <!-- السطر الأول -->
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" Style="{StaticResource PatientInfoLabelStyle}"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="PatientNameValue" Style="{StaticResource PatientInfoValueStyle}"/>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="اسم المريض:" Style="{StaticResource ReportHeaderTextStyle}" HorizontalAlignment="Left"/>
-                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="PatientNameTextBlock" Style="{StaticResource ReportValueTextStyle}" HorizontalAlignment="Right"/>
+                <TextBlock Grid.Row="0" Grid.Column="3" Text="Gender / Age:" Style="{StaticResource PatientInfoLabelStyle}"/>
+                <TextBlock Grid.Row="0" Grid.Column="4" x:Name="GenderAndAgeValue" Style="{StaticResource PatientInfoValueStyle}"/>
 
-                <TextBlock Grid.Row="1" Grid.Column="2" Text="العمر:" Style="{StaticResource ReportHeaderTextStyle}" HorizontalAlignment="Left"/>
-                <TextBlock Grid.Row="1" Grid.Column="3" x:Name="AgeTextBlock" Style="{StaticResource ReportValueTextStyle}" HorizontalAlignment="Right"/>
+                <!-- السطر الثاني -->
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Lab ID:" Style="{StaticResource PatientInfoLabelStyle}"/>
+                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
+                    <TextBlock x:Name="LabIdValue" Style="{StaticResource PatientInfoValueStyle}" VerticalAlignment="Center"/>
+                </StackPanel>
 
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="النوع:" Style="{StaticResource ReportHeaderTextStyle}" HorizontalAlignment="Left"/>
-                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="GenderTextBlock" Style="{StaticResource ReportValueTextStyle}" HorizontalAlignment="Right"/>
+                <TextBlock Grid.Row="1" Grid.Column="3" Text="Referred by:" Style="{StaticResource PatientInfoLabelStyle}"/>
+                <TextBlock Grid.Row="1" Grid.Column="4" x:Name="ReferredByValue" Style="{StaticResource PatientInfoValueStyle}"/>
 
-                <TextBlock Grid.Row="2" Grid.Column="2" Text="الرقم الطبي:" Style="{StaticResource ReportHeaderTextStyle}" HorizontalAlignment="Left"/>
-                <TextBlock Grid.Row="2" Grid.Column="3" x:Name="MedicalRecordNumberTextBlock" Style="{StaticResource ReportValueTextStyle}" HorizontalAlignment="Right"/>
+                <!-- السطر الثالث -->
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Requested on:" Style="{StaticResource PatientInfoLabelStyle}"/>
+                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="RequestedOnValue" Style="{StaticResource PatientInfoValueStyle}"/>
 
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="الطبيب المعالج:" Style="{StaticResource ReportHeaderTextStyle}" HorizontalAlignment="Left"/>
-                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="ReferringPhysicianTextBlock" Style="{StaticResource ReportValueTextStyle}" HorizontalAlignment="Right"/>
+                <TextBlock Grid.Row="2" Grid.Column="3" Text="Printed on:" Style="{StaticResource PatientInfoLabelStyle}"/>
+                <TextBlock Grid.Row="2" Grid.Column="4" x:Name="PrintedOnValue" Style="{StaticResource PatientInfoValueStyle}"/>
+
+                <!-- تم إزالة عناصر Medical Record Number من هنا -->
+
             </Grid>
         </Border>
 
-        <TextBlock Grid.Row="2" Text="Test Results:" FontSize="16" FontWeight="Bold" Margin="0,0,0,10" FlowDirection="LeftToRight"
-                   Foreground="{StaticResource PrimaryTextBrush}"/>
+        <TextBlock Grid.Row="2" Text="Test Results:" Style="{StaticResource ReportSectionHeaderStyle}" />
 
         <DataGrid Grid.Row="3" x:Name="ResultsDataGrid" 
                   ItemsSource="{Binding}" 
                   Style="{StaticResource GlobalDataGridStyle}"
                   ColumnHeaderStyle="{StaticResource GlobalDataGridColumnHeaderStyle}"
                   CellStyle="{StaticResource GlobalDataGridCellStyle}"
-                  RowStyle="{StaticResource GlobalDataGridRowStyle}"
-                  FlowDirection="LeftToRight">
+                  RowStyle="{StaticResource GlobalDataGridRowStyle}">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Test Name" Binding="{Binding Test.Name}" Width="3*" />
-                <DataGridTextColumn Header="Result" Binding="{Binding Result}" Width="2*" />
-                <DataGridTextColumn Header="Unit" Binding="{Binding ResultUnit}" Width="1*" />
-                <DataGridTextColumn Header="Reference Range" Binding="{Binding ReferenceRange}" Width="3*" />
+                <DataGridTextColumn Header="Test" Binding="{Binding Test.Name}" Width="3*"/>
+                <DataGridTextColumn Header="Result" Binding="{Binding Result}" Width="1.5*"/>
+                <DataGridTextColumn Header="Unit" Binding="{Binding ResultUnit}" Width="1*"/>
+                <DataGridTextColumn Header="Normal ranges" Binding="{Binding ReferenceRange}" Width="2.5*"/>
             </DataGrid.Columns>
         </DataGrid>
 

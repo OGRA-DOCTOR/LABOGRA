@@ -1,0 +1,12 @@
+﻿<Users>
+	<User>
+		<Username>admin</Username>
+		<Password>12345</Password>
+		<Role>Admin</Role>
+	</User>
+	<User>
+		<Username>user1</Username>
+		<Password>password1</Password>
+		<Role>User</Role>
+	</User>
+</Users>
