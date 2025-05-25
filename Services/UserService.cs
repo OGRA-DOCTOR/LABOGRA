@@ -12,55 +12,43 @@ namespace LABOGRA.Services
     public class UserService : IUserService
     {
         private readonly string _filePath;
-        private static UserService? _instance;
-        private static readonly object _lock = new object();
 
-        // Singleton pattern for static-like access
-        public static UserService Instance
+        public UserService()
         {
-            get
+            // Get the base directory where the application is running
+            string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
+            // Combine the base directory with the relative path to users.xml
+            // This assumes that your Services/Database/Data structure will be present
+            // in the output directory relative to the executable.
+            _filePath = Path.Combine(baseDirectory, "Services", "Database", "Data", "users.xml");
+
+            EnsureDataDirectoryExists();
+        }
+
+        private void EnsureDataDirectoryExists()
+        {
+            string? directory = Path.GetDirectoryName(_filePath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {
-                if (_instance == null)
+                try
                 {
-                    lock (_lock)
-                    {
-                        if (_instance == null)
-                        {
-                            _instance = new UserService();
-                        }
-                    }
+                    Directory.CreateDirectory(directory);
                 }
-                return _instance;
+                catch (Exception ex)
+                {
+                    // Log or handle the exception if directory creation fails
+                    Console.WriteLine($"Error creating directory {_filePath}: {ex.Message}");
+                    // Depending on the severity, you might want to re-throw or handle differently
+                }
             }
         }
 
-        // Static methods for backward compatibility
-        public static List<User> LoadUsers() => Instance.GetLoadUsers();
-        public static void SaveUsers(List<User> users) => Instance.GetSaveUsers(users);
-        public static User? ValidateUser(string username, string password) => Instance.GetValidateUser(username, password);
-        public static string HashPassword(string password) => Instance.GetHashPassword(password);
-        public static void AddUser(User user) => Instance.GetAddUser(user);
-        public static void UpdateUser(User user) => Instance.GetUpdateUser(user);
-        public static void DeleteUser(string username) => Instance.GetDeleteUser(username);
-        public static bool UserExists(string username) => Instance.GetUserExists(username);
-
-        // Private constructor for Singleton
-        private UserService()
-        {
-            _filePath = Path.Combine("Database", "Data", "users.xml");
-        }
-
-        // Public constructor for dependency injection
-        public UserService(string? customPath = null)
-        {
-            _filePath = customPath ?? Path.Combine("Database", "Data", "users.xml");
-        }
-
-        // Instance methods with Get prefix to avoid confusion
-        public List<User> GetLoadUsers()
+        public List<User> LoadUsers()
         {
             if (!File.Exists(_filePath))
             {
+                SaveUsers(new List<User>());
                 return new List<User>();
             }
 
@@ -77,13 +65,12 @@ namespace LABOGRA.Services
             }
             catch (Exception ex)
             {
-                // Log error if needed
-                Console.WriteLine($"Error loading users: {ex.Message}");
+                Console.WriteLine($"Error loading users from {_filePath}: {ex.Message}");
                 return new List<User>();
             }
         }
 
-        public void GetSaveUsers(List<User> users)
+        public void SaveUsers(List<User> users)
         {
             try
             {
@@ -99,36 +86,31 @@ namespace LABOGRA.Services
                     )
                 );
 
-                string directory = Path.GetDirectoryName(_filePath) ?? "";
-                if (!Directory.Exists(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
-
+                EnsureDataDirectoryExists();
                 doc.Save(_filePath);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error saving users: {ex.Message}");
+                Console.WriteLine($"Error saving users to {_filePath}: {ex.Message}");
                 throw;
             }
         }
 
-        public User? GetValidateUser(string username, string password)
+        public User? ValidateUser(string username, string password)
         {
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
             {
                 return null;
             }
 
-            string passwordHash = GetHashPassword(password);
-            var users = GetLoadUsers();
+            string passwordHash = HashPassword(password);
+            var users = LoadUsers();
             return users.FirstOrDefault(u =>
                 string.Equals(u.Username, username, StringComparison.OrdinalIgnoreCase) &&
                 u.PasswordHash == passwordHash);
         }
 
-        public string GetHashPassword(string password)
+        public string HashPassword(string password)
         {
             if (string.IsNullOrEmpty(password))
             {
@@ -142,37 +124,42 @@ namespace LABOGRA.Services
             }
         }
 
-        public void GetAddUser(User user)
+        public void AddUser(User user)
         {
             if (user == null || string.IsNullOrWhiteSpace(user.Username))
             {
-                throw new ArgumentException("Invalid user data");
+                throw new ArgumentException("User object is null or username is empty.", nameof(user));
             }
 
-            var users = GetLoadUsers();
+            var users = LoadUsers();
 
             if (users.Any(u => string.Equals(u.Username, user.Username, StringComparison.OrdinalIgnoreCase)))
             {
-                throw new InvalidOperationException($"User '{user.Username}' already exists");
+                throw new InvalidOperationException($"User '{user.Username}' already exists.");
             }
 
-            if (!string.IsNullOrEmpty(user.PasswordHash) && !IsBase64String(user.PasswordHash))
+            if (string.IsNullOrEmpty(user.PasswordHash))
             {
-                user.PasswordHash = GetHashPassword(user.PasswordHash);
+                throw new ArgumentException("Password cannot be empty for a new user.", nameof(user.PasswordHash));
+            }
+
+            if (!IsBase64String(user.PasswordHash))
+            {
+                user.PasswordHash = HashPassword(user.PasswordHash);
             }
 
             users.Add(user);
-            GetSaveUsers(users);
+            SaveUsers(users);
         }
 
-        public void GetUpdateUser(User user)
+        public void UpdateUser(User user)
         {
             if (user == null || string.IsNullOrWhiteSpace(user.Username))
             {
-                throw new ArgumentException("Invalid user data");
+                throw new ArgumentException("User object is null or username is empty.", nameof(user));
             }
 
-            var users = GetLoadUsers();
+            var users = LoadUsers();
             var existingUser = users.FirstOrDefault(u =>
                 string.Equals(u.Username, user.Username, StringComparison.OrdinalIgnoreCase));
 
@@ -182,73 +169,55 @@ namespace LABOGRA.Services
 
                 if (!string.IsNullOrEmpty(user.PasswordHash))
                 {
-                    existingUser.PasswordHash = IsBase64String(user.PasswordHash)
-                        ? user.PasswordHash
-                        : GetHashPassword(user.PasswordHash);
+                    if (!IsBase64String(user.PasswordHash))
+                    {
+                        existingUser.PasswordHash = HashPassword(user.PasswordHash);
+                    }
+                    else
+                    {
+                        existingUser.PasswordHash = user.PasswordHash;
+                    }
                 }
-
-                GetSaveUsers(users);
+                SaveUsers(users);
             }
             else
             {
-                throw new InvalidOperationException($"User '{user.Username}' not found");
+                throw new InvalidOperationException($"User '{user.Username}' not found for update.");
             }
         }
 
-        public void GetDeleteUser(string username)
+        public void DeleteUser(string username)
         {
             if (string.IsNullOrWhiteSpace(username))
             {
-                throw new ArgumentException("Username cannot be empty");
+                throw new ArgumentException("Username cannot be empty.", nameof(username));
             }
 
-            var users = GetLoadUsers();
+            var users = LoadUsers();
             int removedCount = users.RemoveAll(u =>
                 string.Equals(u.Username, username, StringComparison.OrdinalIgnoreCase));
 
             if (removedCount > 0)
             {
-                GetSaveUsers(users);
+                SaveUsers(users);
             }
         }
 
-        public bool GetUserExists(string username)
+        public bool UserExists(string username)
         {
             if (string.IsNullOrWhiteSpace(username))
             {
                 return false;
             }
-
-            var users = GetLoadUsers();
+            var users = LoadUsers();
             return users.Any(u => string.Equals(u.Username, username, StringComparison.OrdinalIgnoreCase));
         }
 
-        private bool IsBase64String(string value)
+        private bool IsBase64String(string s)
         {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return false;
-            }
-
-            try
-            {
-                Convert.FromBase64String(value);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            if (string.IsNullOrWhiteSpace(s)) return false;
+            s = s.Trim();
+            return (s.Length % 4 == 0) && System.Text.RegularExpressions.Regex.IsMatch(s, @"^[a-zA-Z0-9\+/]*={0,3}$", System.Text.RegularExpressions.RegexOptions.None);
         }
-
-        // Interface implementation (for dependency injection scenarios)
-        List<User> IUserService.LoadUsers() => GetLoadUsers();
-        void IUserService.SaveUsers(List<User> users) => GetSaveUsers(users);
-        User? IUserService.ValidateUser(string username, string password) => GetValidateUser(username, password);
-        string IUserService.HashPassword(string password) => GetHashPassword(password);
-        void IUserService.AddUser(User user) => GetAddUser(user);
-        void IUserService.UpdateUser(User user) => GetUpdateUser(user);
-        void IUserService.DeleteUser(string username) => GetDeleteUser(username);
-        bool IUserService.UserExists(string username) => GetUserExists(username);
     }
 }

@@ -2,11 +2,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LABOGRA.Models;
-using LABOGRA.Services.Database.Data;
+using LABOGRA.Services; // For IDatabaseService
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.ObjectModel;
-using System.Diagnostics; // تأكد من وجود هذا السطر
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -15,7 +15,7 @@ namespace LABOGRA.ViewModels
 {
     public partial class PatientsViewModel : ObservableObject
     {
-        private readonly LabDbContext _dbContext;
+        private readonly IDatabaseService _databaseService;
 
         [ObservableProperty] private string selectedTitle = "السيد";
         [ObservableProperty] private string patientName = string.Empty;
@@ -47,9 +47,9 @@ namespace LABOGRA.ViewModels
         public ObservableCollection<Test> AvailableTests { get; } = new();
         public ObservableCollection<Test> SelectedTests { get; } = new();
 
-        public PatientsViewModel(LabDbContext dbContext)
+        public PatientsViewModel(IDatabaseService databaseService)
         {
-            _dbContext = dbContext;
+            _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
             IsMaleSelected = true;
             IsFemaleSelected = false;
             IsUnknownSelected = false;
@@ -61,17 +61,17 @@ namespace LABOGRA.ViewModels
         {
             try
             {
-                var physicians = await _dbContext.ReferringPhysicians.OrderBy(p => p.Name).ToListAsync();
+                var physicians = await _databaseService.GetPhysiciansAsync(); // Uses updated service
                 ReferringPhysicians.Clear();
-                foreach (var physician in physicians) ReferringPhysicians.Add(physician);
+                foreach (var physician in physicians.OrderBy(p => p.Name)) ReferringPhysicians.Add(physician);
 
-                var tests = await _dbContext.Tests.OrderBy(t => t.Name).ToListAsync();
+                var tests = await _databaseService.GetTestsAsync(); // Uses updated service
                 AvailableTests.Clear();
-                foreach (var test in tests) AvailableTests.Add(test);
+                foreach (var test in tests.OrderBy(t => t.Name)) AvailableTests.Add(test);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"حدث خطأ أثناء تحميل البيانات: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"حدث خطأ أثناء تحميل البيانات الأولية: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -79,65 +79,43 @@ namespace LABOGRA.ViewModels
         {
             var today = DateTime.Today;
             var datePart = today.ToString("yyyyMMdd");
-            var latest = await _dbContext.Patients
-                .Where(p => p.GeneratedId != null && p.GeneratedId.StartsWith(datePart))
-                .OrderByDescending(p => p.GeneratedId)
-                .FirstOrDefaultAsync();
+            var latestPatient = await _databaseService.GetLatestPatientByGeneratedIdPrefixAsync(datePart);
+
             int next = 1;
-            if (latest?.GeneratedId != null)
+            if (latestPatient?.GeneratedId != null)
             {
-                string seqPart = latest.GeneratedId[datePart.Length..];
+                string seqPart = latestPatient.GeneratedId.Substring(datePart.Length); // Corrected Substring usage
                 if (int.TryParse(seqPart, out int lastSeq)) next = lastSeq + 1;
             }
             return $"{datePart}{next:D2}";
         }
 
         [RelayCommand]
-        private void AddSelectedTest()
-        {
-            if (SelectedAvailableTest != null && !SelectedTests.Contains(SelectedAvailableTest))
-                SelectedTests.Add(SelectedAvailableTest);
-        }
-
+        private void AddSelectedTest() { if (SelectedAvailableTest != null && !SelectedTests.Contains(SelectedAvailableTest)) SelectedTests.Add(SelectedAvailableTest); }
         [RelayCommand]
-        private void RemoveSelectedTest()
-        {
-            if (SelectedTestForRemoval != null)
-                SelectedTests.Remove(SelectedTestForRemoval);
-        }
-
+        private void RemoveSelectedTest() { if (SelectedTestForRemoval != null) SelectedTests.Remove(SelectedTestForRemoval); }
         [RelayCommand]
-        private void AddAllTests()
-        {
-            foreach (var test in AvailableTests)
-                if (!SelectedTests.Contains(test)) SelectedTests.Add(test);
-        }
+        private void AddAllTests() { foreach (var test in AvailableTests) if (!SelectedTests.Contains(test)) SelectedTests.Add(test); }
 
         [RelayCommand]
         private async Task SavePatientAsync()
         {
-            if (string.IsNullOrWhiteSpace(PatientName) || AgeValueInput <= 0 || string.IsNullOrWhiteSpace(SelectedAgeUnit))
-            {
-                MessageBox.Show("يرجى إدخال الاسم والعمر (القيمة والوحدة).", "تحذير", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-            if (SelectedTests.Count == 0)
-            {
-                MessageBox.Show("يرجى اختيار تحليل واحد على الأقل.", "تحذير", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            if (string.IsNullOrWhiteSpace(PatientName) || AgeValueInput <= 0 || string.IsNullOrWhiteSpace(SelectedAgeUnit)) { MessageBox.Show("يرجى إدخال الاسم والعمر (القيمة والوحدة).", "تحذير", MessageBoxButton.OK, MessageBoxImage.Warning); return; }
+            if (SelectedTests.Count == 0) { MessageBox.Show("يرجى اختيار تحليل واحد على الأقل.", "تحذير", MessageBoxButton.OK, MessageBoxImage.Warning); return; }
 
             ReferringPhysician? physicianToSave = SelectedReferringPhysician;
+            bool newPhysicianAddedDuringThisOperation = false;
 
             if (physicianToSave == null && !string.IsNullOrWhiteSpace(CustomReferringPhysicianName))
             {
                 var trimmedCustomName = CustomReferringPhysicianName.Trim();
-                physicianToSave = await _dbContext.ReferringPhysicians
-                                   .FirstOrDefaultAsync(rp => rp.Name.ToLower() == trimmedCustomName.ToLower());
-                if (physicianToSave == null)
+                physicianToSave = await _databaseService.FindOrCreateReferringPhysicianAsync(trimmedCustomName);
+                // If FindOrCreateReferringPhysicianAsync saves the physician immediately, then physicianToSave.Id will be set.
+                // If it doesn't save, then it's tracked by context and will be saved with AddPatientWithLabOrderAsync.
+                // We need to know if it's truly new to add it to the ObservableCollection later.
+                if (physicianToSave.Id == 0) // Indicates it was new and not yet saved by FindOrCreate (if it doesn't save)
                 {
-                    physicianToSave = new ReferringPhysician { Name = trimmedCustomName };
-                    _dbContext.ReferringPhysicians.Add(physicianToSave);
+                    newPhysicianAddedDuringThisOperation = true;
                 }
             }
 
@@ -156,82 +134,55 @@ namespace LABOGRA.ViewModels
                 AgeUnit = SelectedAgeUnit,
                 PhoneNumber = PhoneNumber?.Trim(),
                 RegistrationDateTime = DateTime.Now,
-                ReferringPhysician = physicianToSave
+                // ReferringPhysician property will be set by EF Core if ID is set, or if object is tracked
+                ReferringPhysicianId = physicianToSave?.Id
             };
+            // If physicianToSave is a new entity not yet saved, and its ID is 0,
+            // EF Core will handle the relationship when newPatient (and thus physicianToSave via navigation) is added.
+            if (physicianToSave != null && physicianToSave.Id != 0) newPatient.ReferringPhysician = physicianToSave;
 
-            var labOrder = new LabOrderA
+
+            var labOrder = new LabOrderA // Corrected to LabOrderA
             {
                 RegistrationDateTime = newPatient.RegistrationDateTime,
-                ReferringPhysician = physicianToSave,
-                // Patient = newPatient; // لم نعد بحاجة لتعيين هذا هنا، سيتم الربط عبر الإضافة للمجموعة أدناه
+                ReferringPhysicianId = physicianToSave?.Id,
+                // PatientId will be set by EF Core relationship
             };
+            if (physicianToSave != null && physicianToSave.Id != 0) labOrder.ReferringPhysician = physicianToSave;
 
-            foreach (var test in SelectedTests)
-            {
-                labOrder.Items.Add(new LabOrderItem { TestId = test.Id, IsPrinted = false });
-            }
 
-            // *** التعديل الرئيسي هنا: إضافة الطلب إلى مجموعة طلبات المريض ***
+            foreach (var test in SelectedTests) { labOrder.Items.Add(new LabOrderItem { TestId = test.Id, IsPrinted = false }); }
             newPatient.LabOrders.Add(labOrder);
 
             try
             {
-                _dbContext.Patients.Add(newPatient);
+                bool success = await _databaseService.AddPatientWithLabOrderAsync(newPatient);
 
-                int changes = await _dbContext.SaveChangesAsync();
-
-                if (changes > 0)
+                if (success)
                 {
-                    Debug.WriteLine($"Successfully saved new patient and related data. Rows affected: {changes}");
-
-                    if (physicianToSave != null && ReferringPhysicians.All(rp => rp.Id != physicianToSave.Id))
+                    Debug.WriteLine($"Successfully saved new patient. Generated ID: {newGeneratedId}");
+                    if (physicianToSave != null && (newPhysicianAddedDuringThisOperation || ReferringPhysicians.All(rp => rp.Id != physicianToSave.Id)))
                     {
-                        ReferringPhysicians.Add(physicianToSave);
-                        var sortedPhysicians = ReferringPhysicians.OrderBy(p => p.Name).ToList();
-                        ReferringPhysicians.Clear();
-                        foreach (var p in sortedPhysicians) ReferringPhysicians.Add(p);
-                        SelectedReferringPhysician = ReferringPhysicians.FirstOrDefault(rp => rp.Id == physicianToSave.Id);
+                        // If FindOrCreate... saved it, physicianToSave.Id will be > 0.
+                        // We need to ensure the local collection is updated.
+                        // It's safer to reload physicians or ensure the service returns the saved entity.
+                        // For now, if it was truly new OR not in collection, add it.
+                        if (ReferringPhysicians.All(rp => rp.Id != physicianToSave.Id) && physicianToSave.Id != 0) // Ensure it has an ID
+                        {
+                            ReferringPhysicians.Add(physicianToSave); // Add the potentially newly saved physician
+                                                                      // Re-sort or re-fetch list might be better for UI consistency
+                        }
                     }
-
-                    if (!string.IsNullOrWhiteSpace(SelectedTitle) && !Titles.Contains(SelectedTitle))
-                    {
-                        Titles.Add(SelectedTitle);
-                        var sortedTitles = Titles.OrderBy(t => t).ToList(); Titles.Clear();
-                        foreach (var title in sortedTitles) Titles.Add(title);
-                        SelectedTitle = newPatient.Title;
-                    }
-
                     DisplayGeneratedId = newGeneratedId;
                     MessageBox.Show($"تم حفظ بيانات المريض بنجاح.\nID: {newGeneratedId}", "تم الحفظ", MessageBoxButton.OK, MessageBoxImage.Information);
                     ResetForm();
                 }
-                else
-                {
-                    Debug.WriteLine($"Failed to save new patient data. SaveChangesAsync returned 0 changes.");
-                    MessageBox.Show($"لم يتم حفظ بيانات المريض. لم يتم إجراء أي تغييرات في قاعدة البيانات.", "فشل الحفظ", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
+                else { Debug.WriteLine($"Failed to save new patient data. Service returned false."); MessageBox.Show($"لم يتم حفظ بيانات المريض.", "فشل الحفظ", MessageBoxButton.OK, MessageBoxImage.Warning); }
             }
-            catch (DbUpdateException dbEx)
-            {
-                Debug.WriteLine($"Error saving new patient (DbUpdateException): {dbEx.ToString()}");
-                MessageBox.Show($"خطأ في قاعدة البيانات أثناء حفظ المريض: {dbEx.InnerException?.Message ?? dbEx.Message}", "DB Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error saving new patient (Exception): {ex.ToString()}");
-                MessageBox.Show($"خطأ غير متوقع أثناء حفظ المريض: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            catch (DbUpdateException dbEx) { Debug.WriteLine($"Error saving new patient (DbUpdateException): {dbEx.ToString()}"); MessageBox.Show($"خطأ في قاعدة البيانات: {dbEx.InnerException?.Message ?? dbEx.Message}", "DB Error", MessageBoxButton.OK, MessageBoxImage.Error); }
+            catch (Exception ex) { Debug.WriteLine($"Error saving new patient (Exception): {ex.ToString()}"); MessageBox.Show($"خطأ غير متوقع: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
-
-        private void ResetForm()
-        {
-            SelectedTitle = Titles.FirstOrDefault() ?? "السيد"; PatientName = string.Empty;
-            IsMaleSelected = true; IsFemaleSelected = false; IsUnknownSelected = false;
-            AgeValueInput = 0; SelectedAgeUnit = AgeUnits.FirstOrDefault(u => u == "Year") ?? AgeUnits.First();
-            MedicalRecordNumber = null; PhoneNumber = null; Email = null; Address = null;
-            SelectedReferringPhysician = null; CustomReferringPhysicianName = null;
-            SelectedAvailableTest = null; SelectedTestForRemoval = null; SelectedTests.Clear(); DisplayGeneratedId = null;
-        }
+        private void ResetForm() { SelectedTitle = Titles.FirstOrDefault() ?? "السيد"; PatientName = string.Empty; IsMaleSelected = true; IsFemaleSelected = false; IsUnknownSelected = false; AgeValueInput = 0; SelectedAgeUnit = AgeUnits.FirstOrDefault(u => u == "Year") ?? AgeUnits.First(); MedicalRecordNumber = null; PhoneNumber = null; Email = null; Address = null; SelectedReferringPhysician = null; CustomReferringPhysicianName = null; SelectedAvailableTest = null; SelectedTestForRemoval = null; SelectedTests.Clear(); DisplayGeneratedId = null; }
     }
 }
 // نهاية الكود لملف ViewModels/PatientsViewModel.cs

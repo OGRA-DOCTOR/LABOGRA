@@ -1,35 +1,35 @@
-﻿// الإصدار 4: LoginView.xaml.cs
-// الوصف: إضافة دالة لسحب النافذة من شريط العنوان المخصص.
-using LABOGRA.ViewModels.Login;
+﻿using LABOGRA.ViewModels.Login;
 using System.Windows;
-using System.Windows.Input; // لاستخدام MouseButtonEventArgs
+using System.Windows.Input;
 
 namespace LABOGRA.Views.Login
 {
     public partial class LoginView : Window
     {
-        private readonly LoginViewModel _viewModel;
-
-        public LoginView()
+        public LoginView(LoginViewModel viewModel) // ViewModel is injected
         {
             InitializeComponent();
+            this.DataContext = viewModel;
 
-            _viewModel = new LoginViewModel(
-                ShowMainWindow,
-                this.Close,
-                () => this.WindowState = WindowState.Minimized,
-                (message, caption, button, icon) => MessageBox.Show(this, message, caption, button, icon)
-            );
-            this.DataContext = _viewModel;
+            if (viewModel != null)
+            {
+                viewModel.RequestCloseDialog += (sender, dialogResult) =>
+                {
+                    try
+                    {
+                        this.DialogResult = dialogResult;
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // Can occur if ShowDialog wasn't called, or window is closing already.
+                        // Or if DialogResult is set after the window is already closed.
+                        // For now, we assume ShowDialog is used from App.xaml.cs
+                    }
+                    this.Close();
+                };
+            }
         }
 
-        private void ShowMainWindow()
-        {
-            var mainWindow = new MainWindow(); // تأكد أن مُنشئ MainWindow لا يتطلب LoginView
-            mainWindow.Show();
-        }
-
-        // دالة لسحب النافذة عند الضغط على شريط العنوان المخصص
         private void Window_MouseDown_Drag(object sender, MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Left && e.ButtonState == MouseButtonState.Pressed)

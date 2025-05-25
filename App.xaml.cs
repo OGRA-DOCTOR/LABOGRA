@@ -3,28 +3,55 @@ using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using LABOGRA.Services.Database.Data;
 using LABOGRA.Services;
-using LABOGRA.ViewModels;
-using LABOGRA.ViewModels.Login;
+using LABOGRA.ViewModels; // General ViewModels namespace
+using LABOGRA.ViewModels.Login; // <<== THIS WAS MISSING (UNCOMMENTED)
+using LABOGRA.Views.Login;     // For LoginView
+using System;                   // For IServiceProvider and IDisposable
 
 namespace LABOGRA
 {
     public partial class App : Application
     {
-        private ServiceProvider? _serviceProvider;
+        public IServiceProvider? ServiceProvider { get; private set; }
 
         protected override void OnStartup(StartupEventArgs e)
         {
             var services = new ServiceCollection();
+            ConfigureServices(services);
+            ServiceProvider = services.BuildServiceProvider();
 
-            // تسجيل DbContext with proper connection string
+            using (var scope = ServiceProvider.CreateScope())
+            {
+                var dbService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
+                _ = dbService.EnsureDatabaseCreatedAsync();
+            }
+
+            var loginViewInstance = ServiceProvider.GetRequiredService<LoginView>();
+            var result = loginViewInstance.ShowDialog();
+
+            if (result == true)
+            {
+                var mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
+                // Before showing MainWindow, ensure its DataContext is set if it has one (e.g., MainViewModel)
+                // Example: mainWindow.DataContext = ServiceProvider.GetRequiredService<MainViewModel>();
+                mainWindow.Show();
+            }
+            else
+            {
+                Application.Current.Shutdown();
+            }
+
+            base.OnStartup(e);
+        }
+
+        private void ConfigureServices(IServiceCollection services)
+        {
             services.AddDbContext<LabDbContext>(options =>
                 options.UseSqlite("Data Source=labogra.db"));
 
-            // تسجيل Services
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<IDatabaseService, DatabaseService>();
 
-            // تسجيل ViewModels
             services.AddTransient<PatientsViewModel>();
             services.AddTransient<UsersManagementViewModel>();
             services.AddTransient<ResultsViewModel>();
@@ -32,29 +59,35 @@ namespace LABOGRA
             services.AddTransient<SearchEditViewModel>();
             services.AddTransient<SettingsMenuViewModel>();
             services.AddTransient<TestsManagementViewModel>();
-            services.AddTransient<LoginViewModel>();
+            // Add LabOrderItemViewModel if it needs DI
+            // services.AddTransient<LabOrderItemViewModel>();
 
-            // تسجيل Windows
-            services.AddSingleton<MainWindow>();
 
-            _serviceProvider = services.BuildServiceProvider();
-
-            // Ensure database is created
-            using (var scope = _serviceProvider.CreateScope())
+            // Factory for LoginViewModel
+            services.AddTransient<LoginViewModel>(sp =>
             {
-                var dbService = scope.ServiceProvider.GetRequiredService<IDatabaseService>();
-                _ = dbService.EnsureDatabaseCreatedAsync();
-            }
+                Action minimizeAction = () => { /* View should handle its own minimize */ };
+                Action<string, string, MessageBoxButton, MessageBoxImage> showMessageAction =
+                    (message, caption, button, icon) => MessageBox.Show(message, caption, button, icon);
 
-            var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
-            mainWindow.Show();
+                return new LoginViewModel(
+                    sp.GetRequiredService<IUserService>(),
+                    minimizeAction,
+                    showMessageAction
+                );
+            });
 
-            base.OnStartup(e);
+            services.AddTransient<LoginView>();
+            services.AddSingleton<MainWindow>();
         }
 
         protected override void OnExit(ExitEventArgs e)
         {
-            _serviceProvider?.Dispose();
+            // Correct way to dispose the ServiceProvider
+            if (ServiceProvider is IDisposable disposableProvider)
+            {
+                disposableProvider.Dispose();
+            }
             base.OnExit(e);
         }
     }

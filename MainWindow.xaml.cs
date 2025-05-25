@@ -2,12 +2,12 @@
 using LABOGRA.Views.Results;
 using LABOGRA.Views.Print;
 using LABOGRA.Views.TestsManagement;
-using LABOGRA.Views.SearchEdit;
+using LABOGRA.Views.SearchEdit; // For SearchEditWindow as UserControl
 using LABOGRA.Views.Settings;
 using LABOGRA.Views.UsersManagement;
 using System.Windows;
 using LABOGRA.ViewModels;
-using System.Windows.Controls;
+using System.Windows.Controls; // For UserControl
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
@@ -17,55 +17,11 @@ namespace LABOGRA
     public partial class MainWindow : Window
     {
         private readonly IServiceProvider _serviceProvider;
-        private static IServiceProvider? _staticServiceProvider;
 
-        // Static property for global access
-        public static IServiceProvider? ServiceProvider
-        {
-            get => _staticServiceProvider;
-            set => _staticServiceProvider = value;
-        }
-
-        // Constructor with IServiceProvider for dependency injection
         public MainWindow(IServiceProvider serviceProvider)
         {
             InitializeComponent();
-            _serviceProvider = serviceProvider;
-            _staticServiceProvider = serviceProvider;
-
-            // Initialize the window with default content
-            InitializeDefaultContentAsync();
-        }
-
-        // Parameterless constructor for backward compatibility
-        public MainWindow()
-        {
-            InitializeComponent();
-
-            // Use static service provider if available, otherwise create a basic one
-            if (_staticServiceProvider != null)
-            {
-                _serviceProvider = _staticServiceProvider;
-            }
-            else
-            {
-                // Create a minimal service provider for basic functionality
-                var services = new ServiceCollection();
-
-                // Register essential services
-                services.AddTransient<PatientsViewModel>();
-                services.AddTransient<ResultsViewModel>();
-                services.AddTransient<PrintViewModel>();
-                services.AddTransient<SearchEditViewModel>();
-                services.AddTransient<SettingsMenuViewModel>();
-                services.AddTransient<TestsManagementViewModel>();
-                services.AddTransient<UsersManagementViewModel>();
-
-                _serviceProvider = services.BuildServiceProvider();
-                _staticServiceProvider = _serviceProvider;
-            }
-
-            // Initialize the window with default content
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             InitializeDefaultContentAsync();
         }
 
@@ -73,10 +29,8 @@ namespace LABOGRA
         {
             try
             {
-                // Set PatientsView as default content on startup
                 await Task.Run(() =>
                 {
-                    // This runs on a background thread to avoid blocking the UI
                     Application.Current.Dispatcher.Invoke(() =>
                     {
                         var patientsView = new PatientsView();
@@ -88,243 +42,123 @@ namespace LABOGRA
             }
             catch (Exception ex)
             {
-                // Handle any initialization errors gracefully
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    MessageBox.Show($"خطأ في تهيئة النافذة الرئيسية: {ex.Message}",
-                                  "خطأ",
-                                  MessageBoxButton.OK,
-                                  MessageBoxImage.Error);
+                    MessageBox.Show($"خطأ في تهيئة النافذة الرئيسية: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
                 });
+            }
+        }
+
+        private async Task SetMainContentAsync<TView, TViewModel>()
+            where TView : FrameworkElement, new()
+            where TViewModel : class
+        {
+            try
+            {
+                var viewModel = _serviceProvider.GetRequiredService<TViewModel>();
+
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    var view = new TView { DataContext = viewModel };
+                    MainContentArea.Content = view;
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"خطأ في تحميل الواجهة: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private async void AddPatientsButton_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                await Task.Run(() =>
-                {
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        var patientsView = new PatientsView();
-                        var patientsViewModel = _serviceProvider.GetRequiredService<PatientsViewModel>();
-                        patientsView.DataContext = patientsViewModel;
-                        MainContentArea.Content = patientsView;
-                    });
-                });
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"خطأ في تحميل شاشة المرضى: {ex.Message}",
-                              "خطأ",
-                              MessageBoxButton.OK,
-                              MessageBoxImage.Error);
-            }
+            await SetMainContentAsync<PatientsView, PatientsViewModel>();
         }
 
         private async void RecordResultsButton_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                await Task.Run(() =>
-                {
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        var resultsView = new ResultsView();
-                        var resultsViewModel = _serviceProvider.GetRequiredService<ResultsViewModel>();
-                        resultsView.DataContext = resultsViewModel;
-                        MainContentArea.Content = resultsView;
-                    });
-                });
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"خطأ في تحميل شاشة النتائج: {ex.Message}",
-                              "خطأ",
-                              MessageBoxButton.OK,
-                              MessageBoxImage.Error);
-            }
+            await SetMainContentAsync<ResultsView, ResultsViewModel>();
         }
 
         private async void PrintResultsButton_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                await Task.Run(() =>
-                {
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        var printView = new PrintView();
-                        var printViewModel = _serviceProvider.GetRequiredService<PrintViewModel>();
-                        printView.DataContext = printViewModel;
-                        MainContentArea.Content = printView;
-                    });
-                });
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"خطأ في تحميل شاشة الطباعة: {ex.Message}",
-                              "خطأ",
-                              MessageBoxButton.OK,
-                              MessageBoxImage.Error);
-            }
+            await SetMainContentAsync<PrintView, PrintViewModel>();
         }
 
+        // *** This is the corrected version for SearchEditWindow as a UserControl ***
         private async void SearchEditButton_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                await Task.Run(() =>
-                {
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        var searchEditView = new SearchEditWindow();
-                        var searchEditViewModel = _serviceProvider.GetRequiredService<SearchEditViewModel>();
-                        searchEditView.DataContext = searchEditViewModel;
-                        MainContentArea.Content = searchEditView;
-                    });
-                });
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"خطأ في تحميل شاشة البحث والتحرير: {ex.Message}",
-                              "خطأ",
-                              MessageBoxButton.OK,
-                              MessageBoxImage.Error);
-            }
+            await SetMainContentAsync<SearchEditWindow, SearchEditViewModel>();
         }
 
         private async void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                await Task.Run(() =>
+                var settingsMenuViewModel = _serviceProvider.GetRequiredService<SettingsMenuViewModel>();
+                settingsMenuViewModel.RequestNavigate += SettingsMenuViewModel_RequestNavigate;
+
+                await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        var settingsMenuView = new SettingsMenuView();
-                        var settingsMenuViewModel = _serviceProvider.GetRequiredService<SettingsMenuViewModel>();
-                        settingsMenuViewModel.RequestNavigate += SettingsMenuViewModel_RequestNavigate;
-                        settingsMenuView.DataContext = settingsMenuViewModel;
-                        MainContentArea.Content = settingsMenuView;
-                    });
+                    var settingsMenuView = new SettingsMenuView { DataContext = settingsMenuViewModel };
+                    MainContentArea.Content = settingsMenuView;
                 });
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"خطأ في تحميل شاشة الإعدادات: {ex.Message}",
-                              "خطأ",
-                              MessageBoxButton.OK,
-                              MessageBoxImage.Error);
+                MessageBox.Show($"خطأ في تحميل شاشة الإعدادات: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private async void SettingsMenuViewModel_RequestNavigate(object? sender, Type viewModelType)
         {
+            if (MainContentArea.Content is FrameworkElement currentView && currentView.DataContext is SettingsMenuViewModel oldVm)
+            {
+                oldVm.RequestNavigate -= SettingsMenuViewModel_RequestNavigate;
+            }
+
             try
             {
-                await Task.Run(() =>
+                UserControl? targetView = null;
+                object? targetViewModel = null;
+
+                if (viewModelType == typeof(TestsManagementViewModel))
                 {
-                    Application.Current.Dispatcher.Invoke(() =>
+                    targetViewModel = _serviceProvider.GetRequiredService<TestsManagementViewModel>();
+                    targetView = new TestsManagementView();
+                }
+                else if (viewModelType == typeof(UsersManagementViewModel))
+                {
+                    targetViewModel = _serviceProvider.GetRequiredService<UsersManagementViewModel>();
+                    targetView = new UsersManagementView();
+                }
+
+                if (targetView != null && targetViewModel != null)
+                {
+                    await Application.Current.Dispatcher.InvokeAsync(() =>
                     {
-                        UserControl? targetView = null;
-                        object? targetViewModel = null;
-
-                        if (viewModelType == typeof(TestsManagementViewModel))
-                        {
-                            targetViewModel = _serviceProvider.GetRequiredService<TestsManagementViewModel>();
-                            targetView = new TestsManagementView();
-                        }
-                        else if (viewModelType == typeof(UsersManagementViewModel))
-                        {
-                            targetViewModel = _serviceProvider.GetRequiredService<UsersManagementViewModel>();
-                            targetView = new UsersManagementView();
-                        }
-
-                        if (targetView != null && targetViewModel != null)
-                        {
-                            targetView.DataContext = targetViewModel;
-                            MainContentArea.Content = targetView;
-                        }
-                        else
-                        {
-                            MessageBox.Show("لا يمكن الانتقال إلى نوع الإعدادات المطلوب.",
-                                          "خطأ في التنقل",
-                                          MessageBoxButton.OK,
-                                          MessageBoxImage.Error);
-                        }
+                        targetView.DataContext = targetViewModel;
+                        MainContentArea.Content = targetView;
                     });
-                });
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"خطأ في التنقل إلى الإعدادات: {ex.Message}",
-                              "خطأ",
-                              MessageBoxButton.OK,
-                              MessageBoxImage.Error);
-            }
-        }
-
-        private async void LogoutButton_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                await Task.Run(() =>
+                }
+                else
                 {
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        this.Close();
-                        var loginView = new LABOGRA.Views.Login.LoginView();
-                        loginView.Show();
-                    });
-                });
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"خطأ في تسجيل الخروج: {ex.Message}",
-                              "خطأ",
-                              MessageBoxButton.OK,
-                              MessageBoxImage.Error);
-            }
-        }
-
-        // Method to handle window closing
-        protected override void OnClosed(EventArgs e)
-        {
-            try
-            {
-                // Clean up resources if needed
-                if (_serviceProvider is IDisposable disposableProvider)
-                {
-                    disposableProvider.Dispose();
+                    MessageBox.Show("لا يمكن الانتقال إلى نوع الإعدادات المطلوب.", "خطأ في التنقل", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception ex)
             {
-                // Log the error but don't show a message box as the window is closing
-                System.Diagnostics.Debug.WriteLine($"Error during window cleanup: {ex.Message}");
-            }
-            finally
-            {
-                base.OnClosed(e);
+                MessageBox.Show($"خطأ في التنقل إلى الإعدادات: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        // Static method to create MainWindow with service provider
-        public static MainWindow CreateWithServiceProvider(IServiceProvider serviceProvider)
+        private void LogoutButton_Click(object sender, RoutedEventArgs e)
         {
-            ServiceProvider = serviceProvider;
-            return new MainWindow(serviceProvider);
+            this.Close();
         }
 
-        // Method to update service provider
-        public void UpdateServiceProvider(IServiceProvider serviceProvider)
+        protected override void OnClosed(EventArgs e)
         {
-            if (_serviceProvider != serviceProvider)
-            {
-                _staticServiceProvider = serviceProvider;
-            }
+            base.OnClosed(e);
         }
     }
 }

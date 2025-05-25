@@ -27,6 +27,8 @@
     📄 20250523113127_UpdateUserModel.Designer.cs
     📄 20250523115405_NewInitialCreate.cs
     📄 20250523115405_NewInitialCreate.Designer.cs
+    📄 20250524011104_ReflectFinalModelChanges.cs
+    📄 20250524011104_ReflectFinalModelChanges.Designer.cs
     📄 LabDbContextModelSnapshot.cs
 📁 Models
     📄 LabOrder.cs
@@ -44,10 +46,13 @@
 📁 Services
     📁 Database
         📁 Data
+            📄 DatabasePathHelper.cs
             📄 LabDbContext.cs
             📄 LabDbContextFactory.cs
             📄 users.xml
         📄 DatabaseService.cs
+    📄 IDatabaseService.cs
+    📄 IUserService.cs
     📄 PatientReportGenerator.cs
     📄 UserService.cs
 📁 ViewModels
