@@ -1,15 +1,10 @@
-﻿// الإصدار: 4 (لهذا الملف)
-// اسم الملف: LABOGRA/Views/Results/ResultsView.xaml.cs
-// تاريخ التحديث: 2023-10-30
-// الوصف:
-// 1. تحسين منطق انتقال التركيز الفعلي للكتابة إلى TextBox الصحيح عند استخدام Enter أو الأسهم.
-// 2. ضمان أن ListViewItem مُهيأ قبل محاولة التركيز.
-using LABOGRA.ViewModels; // هذا الـ using مطلوب للتعرف على LabOrderItemViewModel و ResultsViewModel
+﻿// بداية الكود لملف Views/Results/ResultsView.xaml.cs
+using LABOGRA.ViewModels; // قد نحتاجه إذا كان LabOrderItemViewModel لا يزال يُستخدم هنا
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Threading; // لإضافة DispatcherPriority
+using System.Windows.Threading;
 
 namespace LABOGRA.Views.Results
 {
@@ -18,9 +13,13 @@ namespace LABOGRA.Views.Results
         public ResultsView()
         {
             InitializeComponent();
-            // *** هذا السطر يجب تفعيله لتعيين DataContext للـ View وعرض قائمة المرضى ***
-            DataContext = new ResultsViewModel();
+            // لا نقوم بتعيين DataContext هنا لـ ResultsViewModel.
+            // سيتم تعيينه من MainWindow.xaml.cs
+            // الكود الخاص بالتركيز والـ KeyDown سيعتمد على الـ DataContext الذي تم تعيينه من الخارج
         }
+
+        // باقي الدوال (ResultsListView_PreviewKeyDown, MoveFocusToNextItem, ...) تبقى كما هي
+        // لأنها تتعامل مع الواجهة والـ DataContext الذي يُفترض أن يكون قد تم تعيينه.
 
         private void ResultsListView_PreviewKeyDown(object sender, KeyEventArgs e)
         {
@@ -30,15 +29,12 @@ namespace LABOGRA.Views.Results
             var currentItemViewModel = listView.SelectedItem as LabOrderItemViewModel;
             int currentIndex = listView.SelectedIndex;
 
-            // إذا لم يكن هناك عنصر محدد وكان هناك عناصر، حاول تحديد الأول
             if (currentIndex == -1 && listView.Items.Count > 0)
             {
                 listView.SelectedIndex = 0;
-                currentIndex = 0; // تحديث المؤشر
+                currentIndex = 0;
             }
 
-            // هنا يتم استخدام LabOrderItemViewModel
-            // تحديث currentItemViewModel بعد التأكد من وجود تحديد
             currentItemViewModel = listView.SelectedItem as LabOrderItemViewModel;
 
             if (e.Key == Key.Enter)
@@ -92,7 +88,7 @@ namespace LABOGRA.Views.Results
 
             if (!item.IsLoaded)
             {
-                item.ApplyTemplate();
+                item.ApplyTemplate(); // Ensure the template is applied
             }
 
             item.Dispatcher.BeginInvoke(DispatcherPriority.Input, new System.Action(() =>
@@ -105,10 +101,11 @@ namespace LABOGRA.Views.Results
                 }
                 else
                 {
+                    // Fallback if template is complex
                     ContentPresenter? contentPresenter = FindVisualChild<ContentPresenter>(item);
                     if (contentPresenter != null)
                     {
-                        contentPresenter.ApplyTemplate();
+                        contentPresenter.ApplyTemplate(); // Ensure template for content presenter
                         resultTextBox = contentPresenter.ContentTemplate?.FindName("ResultTextBox", contentPresenter) as TextBox;
                         if (resultTextBox != null)
                         {
@@ -159,6 +156,8 @@ namespace LABOGRA.Views.Results
 
         private void ResultsView_Loaded(object sender, RoutedEventArgs e)
         {
+            // تأكد من أن هذا الكود لا يسبب مشكلة إذا كان DataContext لم يتم تعيينه بعد
+            // أو إذا كان ResultsListView فارغاً
             this.Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, new System.Action(() =>
             {
                 if (ResultsListView.Items.Count > 0 && ResultsListView.IsEnabled)
@@ -168,7 +167,7 @@ namespace LABOGRA.Views.Results
                         ResultsListView.SelectedIndex = 0;
                     }
                     ResultsListView.ScrollIntoView(ResultsListView.SelectedItem);
-                    if (ResultsListView.ItemContainerGenerator.ContainerFromIndex(ResultsListView.SelectedIndex) is ListViewItem firstItemContainer)
+                    if (ResultsListView.ItemContainerGenerator.ContainerFromItem(ResultsListView.SelectedItem) is ListViewItem firstItemContainer) // تعديل هنا
                     {
                         FocusResultTextBoxInItem(firstItemContainer);
                     }
@@ -177,3 +176,4 @@ namespace LABOGRA.Views.Results
         }
     }
 }
+// نهاية الكود لملف Views/Results/ResultsView.xaml.cs

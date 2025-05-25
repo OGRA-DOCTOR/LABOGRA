@@ -1,5 +1,4 @@
-﻿// الإصدار: 5 (إزالة تحذيرات Nullable من EditablePatient) // اسم الملف: SearchEditViewModel.cs // الوصف: ViewModel لواجهة البحث عن المرضى وتعديل بياناتهم، مع إزالة تحذيرات nullable من EditablePatient.
-
+﻿// بداية الكود لملف ViewModels/SearchEditViewModel.cs
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LABOGRA.Models;
@@ -15,7 +14,7 @@ namespace LABOGRA.ViewModels
 {
     public partial class SearchEditViewModel : ObservableObject
     {
-        private readonly LabDbContextFactory _contextFactory;
+        private readonly LabDbContext _dbContext; // تعديل: لاستقبال DbContext مباشرة
 
         [ObservableProperty] private string? searchPatientName;
         [ObservableProperty] private string? searchMedicalRecordNumber;
@@ -29,40 +28,28 @@ namespace LABOGRA.ViewModels
         public Patient? SelectedPatientFromSearch
         {
             get => _selectedPatientFromSearch;
-            set
-            {
-                if (SetProperty(ref _selectedPatientFromSearch, value))
-                {
-                    LoadSelectedPatientForEditing();
-                    OnPropertyChanged(nameof(IsPatientSelectedForEdit));
-                }
-            }
+            set { if (SetProperty(ref _selectedPatientFromSearch, value)) { LoadSelectedPatientForEditing(); OnPropertyChanged(nameof(IsPatientSelectedForEdit)); } }
         }
 
-        [ObservableProperty] private Patient? editablePatient;
+        [ObservableProperty] private Patient? editablePatient; // هذا هو الكائن الذي يتم تعديله
         public bool IsPatientSelectedForEdit => EditablePatient != null;
-
         [ObservableProperty] private bool isEditablePatientMale;
         [ObservableProperty] private bool isEditablePatientFemale;
-
         [ObservableProperty] private ReferringPhysician? selectedEditableReferringPhysician;
 
-        public ObservableCollection<string> Titles { get; } = new ObservableCollection<string>
-    {
-        "السيد", "السيدة", "الطفل", "الطفلة", "الأستاذ", "الأستاذة",
-        "الحاج", "الحاجة", "الدكتور", "الدكتورة", "الآنسة", "مدام"
-    };
-
-        public ObservableCollection<string> AgeUnits { get; } = new ObservableCollection<string>
-    {
-        "يوم", "شهر", "سنة"
-    };
-
+        public ObservableCollection<string> Titles { get; } = new ObservableCollection<string> { "السيد", "السيدة", "الطفل", "الطفلة", "الأستاذ", "الأستاذة", "الحاج", "الحاجة", "الدكتور", "الدكتورة", "الآنسة", "مدام" };
+        public ObservableCollection<string> AgeUnits { get; } = new ObservableCollection<string> { "يوم", "شهر", "سنة" }; // يجب أن تكون بالإنجليزية لتتوافق مع PatientsViewModel
         public ObservableCollection<ReferringPhysician> ReferringPhysicians { get; } = new ObservableCollection<ReferringPhysician>();
 
-        public SearchEditViewModel()
+        // تعديل المنشئ ليقبل LabDbContext
+        public SearchEditViewModel(LabDbContext dbContext)
         {
-            _contextFactory = new LabDbContextFactory();
+            _dbContext = dbContext; // تخزين DbContext المستلم
+            // تعديل وحدات العمر لتكون بالإنجليزية
+            AgeUnits.Clear();
+            AgeUnits.Add("Day");
+            AgeUnits.Add("Month");
+            AgeUnits.Add("Year");
             _ = LoadInitialDataAsync();
         }
 
@@ -70,80 +57,49 @@ namespace LABOGRA.ViewModels
         {
             try
             {
-                using var context = _contextFactory.CreateDbContext(Array.Empty<string>());
-                var physicians = await context.ReferringPhysicians.OrderBy(p => p.Name).ToListAsync();
+                // استخدام _dbContext مباشرة
+                var physicians = await _dbContext.ReferringPhysicians.OrderBy(p => p.Name).ToListAsync();
                 ReferringPhysicians.Clear();
-                foreach (var physician in physicians)
-                    ReferringPhysicians.Add(physician);
+                foreach (var physician in physicians) ReferringPhysicians.Add(physician);
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"حدث خطأ أثناء تحميل قائمة الأطباء: {ex.Message}", "خطأ تحميل", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            catch (Exception ex) { MessageBox.Show($"حدث خطأ أثناء تحميل قائمة الأطباء: {ex.Message}", "خطأ تحميل", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
 
         [RelayCommand]
         private async Task SearchAsync()
         {
-            SearchResults.Clear();
-            SelectedPatientFromSearch = null;
-            EditablePatient = null;
-
+            SearchResults.Clear(); SelectedPatientFromSearch = null; EditablePatient = null;
             try
             {
-                using var context = _contextFactory.CreateDbContext(Array.Empty<string>());
-                IQueryable<Patient> query = context.Patients.Include(p => p.ReferringPhysician);
-
-                if (!string.IsNullOrWhiteSpace(SearchPatientName))
-                    query = query.Where(p => p.Name.Contains(SearchPatientName));
-
-                if (!string.IsNullOrWhiteSpace(SearchMedicalRecordNumber))
-                    query = query.Where(p => p.MedicalRecordNumber != null && p.MedicalRecordNumber.Contains(SearchMedicalRecordNumber));
-
-                if (!string.IsNullOrWhiteSpace(SearchPhoneNumber))
-                    query = query.Where(p => p.PhoneNumber != null && p.PhoneNumber.Contains(SearchPhoneNumber));
-
-                if (SearchRegistrationDateFrom.HasValue)
-                    query = query.Where(p => p.RegistrationDateTime >= SearchRegistrationDateFrom.Value.Date);
-
-                if (SearchRegistrationDateTo.HasValue)
-                    query = query.Where(p => p.RegistrationDateTime < SearchRegistrationDateTo.Value.Date.AddDays(1));
-
-                if (!string.IsNullOrWhiteSpace(SearchReferringPhysicianName))
-                    query = query.Where(p => p.ReferringPhysician != null && p.ReferringPhysician.Name.Contains(SearchReferringPhysicianName));
+                // استخدام _dbContext مباشرة
+                IQueryable<Patient> query = _dbContext.Patients.Include(p => p.ReferringPhysician);
+                if (!string.IsNullOrWhiteSpace(SearchPatientName)) query = query.Where(p => p.Name.Contains(SearchPatientName));
+                if (!string.IsNullOrWhiteSpace(SearchMedicalRecordNumber)) query = query.Where(p => p.MedicalRecordNumber != null && p.MedicalRecordNumber.Contains(SearchMedicalRecordNumber));
+                if (!string.IsNullOrWhiteSpace(SearchPhoneNumber)) query = query.Where(p => p.PhoneNumber != null && p.PhoneNumber.Contains(SearchPhoneNumber));
+                if (SearchRegistrationDateFrom.HasValue) query = query.Where(p => p.RegistrationDateTime >= SearchRegistrationDateFrom.Value.Date);
+                if (SearchRegistrationDateTo.HasValue) query = query.Where(p => p.RegistrationDateTime < SearchRegistrationDateTo.Value.Date.AddDays(1));
+                if (!string.IsNullOrWhiteSpace(SearchReferringPhysicianName)) query = query.Where(p => p.ReferringPhysician != null && p.ReferringPhysician.Name.Contains(SearchReferringPhysicianName));
 
                 var results = await query.OrderByDescending(p => p.RegistrationDateTime).Take(100).ToListAsync();
-
-                foreach (var patient in results)
-                    SearchResults.Add(patient);
-
-                if (!SearchResults.Any())
-                    MessageBox.Show("لم يتم العثور على نتائج تطابق معايير البحث.", "لا توجد نتائج", MessageBoxButton.OK, MessageBoxImage.Information);
+                foreach (var patient in results) SearchResults.Add(patient);
+                if (!SearchResults.Any()) MessageBox.Show("لم يتم العثور على نتائج تطابق معايير البحث.", "لا توجد نتائج", MessageBoxButton.OK, MessageBoxImage.Information);
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"حدث خطأ أثناء عملية البحث: {ex.Message}", "خطأ بحث", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            catch (Exception ex) { MessageBox.Show($"حدث خطأ أثناء عملية البحث: {ex.Message}", "خطأ بحث", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
 
         [RelayCommand]
         private void ClearSearch()
         {
-            SearchPatientName = string.Empty;
-            SearchMedicalRecordNumber = string.Empty;
-            SearchPhoneNumber = string.Empty;
-            SearchRegistrationDateFrom = null;
-            SearchRegistrationDateTo = null;
-            SearchReferringPhysicianName = string.Empty;
-            SearchResults.Clear();
-            SelectedPatientFromSearch = null;
-            EditablePatient = null;
+            SearchPatientName = string.Empty; SearchMedicalRecordNumber = string.Empty; SearchPhoneNumber = string.Empty;
+            SearchRegistrationDateFrom = null; SearchRegistrationDateTo = null; SearchReferringPhysicianName = string.Empty;
+            SearchResults.Clear(); SelectedPatientFromSearch = null; EditablePatient = null;
         }
 
         private void LoadSelectedPatientForEditing()
         {
             if (SelectedPatientFromSearch != null)
             {
+                // إنشاء نسخة جديدة لتعديلها بدلاً من تعديل كائن البحث مباشرة
                 EditablePatient = new Patient
                 {
                     Id = SelectedPatientFromSearch.Id,
@@ -154,153 +110,98 @@ namespace LABOGRA.ViewModels
                     Address = SelectedPatientFromSearch.Address,
                     Gender = SelectedPatientFromSearch.Gender,
                     AgeValue = SelectedPatientFromSearch.AgeValue,
-                    AgeUnit = SelectedPatientFromSearch.AgeUnit,
+                    AgeUnit = SelectedPatientFromSearch.AgeUnit, // تأكد أن AgeUnit هنا بالإنجليزية
                     PhoneNumber = SelectedPatientFromSearch.PhoneNumber,
                     RegistrationDateTime = SelectedPatientFromSearch.RegistrationDateTime,
                     ReferringPhysicianId = SelectedPatientFromSearch.ReferringPhysicianId,
-                    ReferringPhysician = SelectedPatientFromSearch.ReferringPhysician
+                    // لا ننسخ LabOrders أو Items لأننا لا نعدلها هنا
                 };
+                // تحميل الطبيب المحول بشكل منفصل إذا لزم الأمر
+                if (EditablePatient.ReferringPhysicianId.HasValue)
+                {
+                    EditablePatient.ReferringPhysician = ReferringPhysicians.FirstOrDefault(rp => rp.Id == EditablePatient.ReferringPhysicianId.Value);
+                }
+
 
                 IsEditablePatientMale = EditablePatient.Gender == "Male";
                 IsEditablePatientFemale = EditablePatient.Gender == "Female";
-
-                SelectedEditableReferringPhysician = EditablePatient.ReferringPhysicianId.HasValue
-                    ? ReferringPhysicians.FirstOrDefault(rp => rp.Id == EditablePatient.ReferringPhysicianId.Value)
-                    : null;
+                SelectedEditableReferringPhysician = EditablePatient.ReferringPhysician;
             }
-            else
-            {
-                EditablePatient = null;
-            }
-
+            else { EditablePatient = null; }
             OnPropertyChanged(nameof(IsPatientSelectedForEdit));
         }
 
         [RelayCommand]
         private async Task SaveChangesAsync()
         {
-            if (EditablePatient is not Patient safeEditablePatient)
-            {
-                MessageBox.Show("لا يوجد مريض محدد للتعديل.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            if (EditablePatient == null) { MessageBox.Show("لا يوجد مريض محدد للتعديل.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Warning); return; }
+            if (string.IsNullOrWhiteSpace(EditablePatient.Name)) { MessageBox.Show("اسم المريض لا يمكن أن يكون فارغًا.", "خطأ إدخال", MessageBoxButton.OK, MessageBoxImage.Warning); return; }
 
-            if (string.IsNullOrWhiteSpace(safeEditablePatient.Name))
-            {
-                MessageBox.Show("اسم المريض لا يمكن أن يكون فارغًا.", "خطأ إدخال", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            if (IsEditablePatientMale) EditablePatient.Gender = "Male";
+            else if (IsEditablePatientFemale) EditablePatient.Gender = "Female";
+            // إذا لم يكن أي منهما محددًا، يمكننا تعيينه إلى "Unknown" أو تركه كما هو
+            else EditablePatient.Gender = "Unknown";
 
-            if (IsEditablePatientMale) safeEditablePatient.Gender = "Male";
-            else if (IsEditablePatientFemale) safeEditablePatient.Gender = "Female";
 
-            if (SelectedEditableReferringPhysician != null)
-            {
-                safeEditablePatient.ReferringPhysicianId = SelectedEditableReferringPhysician.Id;
-                safeEditablePatient.ReferringPhysician = SelectedEditableReferringPhysician;
-            }
-            else if (!string.IsNullOrWhiteSpace(safeEditablePatient.ReferringPhysician?.Name))
-            {
-                var existingPhysician = ReferringPhysicians.FirstOrDefault(rp => rp.Name.Equals(safeEditablePatient.ReferringPhysician.Name, StringComparison.OrdinalIgnoreCase));
-                if (existingPhysician != null)
-                {
-                    safeEditablePatient.ReferringPhysicianId = existingPhysician.Id;
-                    safeEditablePatient.ReferringPhysician = existingPhysician;
-                }
-            }
-            else
-            {
-                safeEditablePatient.ReferringPhysicianId = null;
-                safeEditablePatient.ReferringPhysician = null;
-            }
-
-            var dataForDisplayUpdate = new Patient
-            {
-                Id = safeEditablePatient.Id,
-                Title = safeEditablePatient.Title,
-                Name = safeEditablePatient.Name,
-                MedicalRecordNumber = safeEditablePatient.MedicalRecordNumber,
-                Email = safeEditablePatient.Email,
-                Address = safeEditablePatient.Address,
-                Gender = safeEditablePatient.Gender,
-                AgeValue = safeEditablePatient.AgeValue,
-                AgeUnit = safeEditablePatient.AgeUnit,
-                PhoneNumber = safeEditablePatient.PhoneNumber,
-                RegistrationDateTime = safeEditablePatient.RegistrationDateTime,
-                ReferringPhysicianId = safeEditablePatient.ReferringPhysicianId,
-                ReferringPhysician = safeEditablePatient.ReferringPhysician
-            };
+            EditablePatient.ReferringPhysicianId = SelectedEditableReferringPhysician?.Id;
+            // لا حاجة لتعيين EditablePatient.ReferringPhysician هنا لأن EF Core سيتعامل مع العلاقة عبر ReferringPhysicianId
 
             try
             {
-                using var context = _contextFactory.CreateDbContext(Array.Empty<string>());
-                var patientInDb = await context.Patients.FirstOrDefaultAsync(p => p.Id == safeEditablePatient.Id);
-
+                // استخدام _dbContext مباشرة
+                var patientInDb = await _dbContext.Patients.FindAsync(EditablePatient.Id);
                 if (patientInDb != null)
                 {
-                    patientInDb.Title = safeEditablePatient.Title;
-                    patientInDb.Name = safeEditablePatient.Name;
-                    patientInDb.MedicalRecordNumber = safeEditablePatient.MedicalRecordNumber;
-                    patientInDb.Email = safeEditablePatient.Email;
-                    patientInDb.Address = safeEditablePatient.Address;
-                    patientInDb.Gender = safeEditablePatient.Gender;
-                    patientInDb.AgeValue = safeEditablePatient.AgeValue;
-                    patientInDb.AgeUnit = safeEditablePatient.AgeUnit;
-                    patientInDb.PhoneNumber = safeEditablePatient.PhoneNumber;
-                    patientInDb.ReferringPhysicianId = safeEditablePatient.ReferringPhysicianId;
+                    patientInDb.Title = EditablePatient.Title; patientInDb.Name = EditablePatient.Name;
+                    patientInDb.MedicalRecordNumber = EditablePatient.MedicalRecordNumber; patientInDb.Email = EditablePatient.Email;
+                    patientInDb.Address = EditablePatient.Address; patientInDb.Gender = EditablePatient.Gender;
+                    patientInDb.AgeValue = EditablePatient.AgeValue; patientInDb.AgeUnit = EditablePatient.AgeUnit; // تأكد أن AgeUnit هنا بالإنجليزية
+                    patientInDb.PhoneNumber = EditablePatient.PhoneNumber;
+                    patientInDb.ReferringPhysicianId = EditablePatient.ReferringPhysicianId;
+                    // لا نعدل RegistrationDateTime
 
-                    await context.SaveChangesAsync();
-
+                    await _dbContext.SaveChangesAsync();
                     MessageBox.Show("تم حفظ التعديلات بنجاح!", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
 
-                    var patientInResults = SearchResults.FirstOrDefault(p => p.Id == dataForDisplayUpdate.Id);
+                    // تحديث العنصر في قائمة نتائج البحث
+                    var patientInResults = SearchResults.FirstOrDefault(p => p.Id == patientInDb.Id);
                     if (patientInResults != null)
                     {
+                        // تحديث خصائص patientInResults من patientInDb لتعكس أي تغييرات (مثل الطبيب المحول إذا تم جلبه)
+                        patientInResults.Title = patientInDb.Title; patientInResults.Name = patientInDb.Name;
+                        patientInResults.MedicalRecordNumber = patientInDb.MedicalRecordNumber; patientInResults.Email = patientInDb.Email;
+                        patientInResults.Address = patientInDb.Address; patientInResults.Gender = patientInDb.Gender;
+                        patientInResults.AgeValue = patientInDb.AgeValue; patientInResults.AgeUnit = patientInDb.AgeUnit;
+                        patientInResults.PhoneNumber = patientInDb.PhoneNumber;
+                        patientInResults.ReferringPhysicianId = patientInDb.ReferringPhysicianId;
+                        // إعادة تحميل الطبيب المحول لقائمة العرض
+                        if (patientInDb.ReferringPhysicianId.HasValue)
+                        {
+                            patientInResults.ReferringPhysician = await _dbContext.ReferringPhysicians.FindAsync(patientInDb.ReferringPhysicianId.Value);
+                        }
+                        else
+                        {
+                            patientInResults.ReferringPhysician = null;
+                        }
+                        // لإجبار واجهة المستخدم على التحديث
                         var index = SearchResults.IndexOf(patientInResults);
-                        dataForDisplayUpdate.RegistrationDateTime = patientInDb.RegistrationDateTime;
-                        SearchResults[index] = dataForDisplayUpdate;
-                        SelectedPatientFromSearch = dataForDisplayUpdate;
+                        SearchResults.RemoveAt(index);
+                        SearchResults.Insert(index, patientInResults);
+                        SelectedPatientFromSearch = patientInResults; // إعادة تحديد العنصر المحدث
                     }
-
-                    EditablePatient = null;
+                    EditablePatient = null; // مسح نموذج التعديل
                     OnPropertyChanged(nameof(IsPatientSelectedForEdit));
                 }
-                else
-                {
-                    MessageBox.Show("لم يتم العثور على المريض في قاعدة البيانات لتحديثه.", "خطأ تحديث", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                else { MessageBox.Show("لم يتم العثور على المريض في قاعدة البيانات لتحديثه.", "خطأ تحديث", MessageBoxButton.OK, MessageBoxImage.Error); }
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"حدث خطأ أثناء حفظ التعديلات: {ex.Message}", "خطأ حفظ", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            catch (Exception ex) { MessageBox.Show($"حدث خطأ أثناء حفظ التعديلات: {ex.Message}", "خطأ حفظ", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
 
         [RelayCommand]
-        private void CancelEdit()
-        {
-            EditablePatient = null;
-            OnPropertyChanged(nameof(IsPatientSelectedForEdit));
-        }
+        private void CancelEdit() { EditablePatient = null; OnPropertyChanged(nameof(IsPatientSelectedForEdit)); }
 
-        partial void OnIsEditablePatientMaleChanged(bool value)
-        {
-            if (value && EditablePatient != null)
-            {
-                EditablePatient.Gender = "Male";
-                IsEditablePatientFemale = false;
-            }
-        }
-
-        partial void OnIsEditablePatientFemaleChanged(bool value)
-        {
-            if (value && EditablePatient != null)
-            {
-                EditablePatient.Gender = "Female";
-                IsEditablePatientMale = false;
-            }
-        }
+        partial void OnIsEditablePatientMaleChanged(bool value) { if (value && EditablePatient != null) { EditablePatient.Gender = "Male"; IsEditablePatientFemale = false; } }
+        partial void OnIsEditablePatientFemaleChanged(bool value) { if (value && EditablePatient != null) { EditablePatient.Gender = "Female"; IsEditablePatientMale = false; } }
     }
-
 }
-
+// نهاية الكود لملف ViewModels/SearchEditViewModel.cs

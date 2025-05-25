@@ -1,15 +1,17 @@
-﻿using LABOGRA.Views.Patients;
+﻿// بداية الكود لملف MainWindow.xaml.cs
+using LABOGRA.Views.Patients;
 using LABOGRA.Views.Results;
 using LABOGRA.Views.Print;
 using LABOGRA.Views.TestsManagement;
-using LABOGRA.Views.SearchEdit;
+using LABOGRA.Views.SearchEdit; // هذا using صحيح لـ namespace
 using LABOGRA.Views.Settings;
 using LABOGRA.Views.UsersManagement;
 using System.Windows;
 using LABOGRA.ViewModels;
 using System.Windows.Controls;
 using Microsoft.EntityFrameworkCore;
-using LABOGRA.Services.Database.Data; // تعديل: استدعاء LabDbContext
+using LABOGRA.Services.Database.Data;
+using System;
 
 namespace LABOGRA
 {
@@ -20,43 +22,49 @@ namespace LABOGRA
         public MainWindow()
         {
             InitializeComponent();
-
-            // تهيئة DbContext مع SQLite
             var optionsBuilder = new DbContextOptionsBuilder<LabDbContext>();
-            optionsBuilder.UseSqlite("Data Source=labdatabase.db"); // حط المسار الصحيح للقاعدة هنا
+            optionsBuilder.UseSqlite(DatabasePathHelper.GetConnectionString());
             _dbContext = new LabDbContext(optionsBuilder.Options);
 
-            MainContentArea.Content = new PatientsView();
+            var patientsViewModel = new PatientsViewModel(_dbContext);
+            var patientsView = new PatientsView { DataContext = patientsViewModel };
+            MainContentArea.Content = patientsView;
         }
 
         private void AddPatientsButton_Click(object sender, RoutedEventArgs e)
         {
-            MainContentArea.Content = new PatientsView();
+            var patientsViewModel = new PatientsViewModel(_dbContext);
+            var patientsView = new PatientsView { DataContext = patientsViewModel };
+            MainContentArea.Content = patientsView;
         }
 
         private void RecordResultsButton_Click(object sender, RoutedEventArgs e)
         {
-            MainContentArea.Content = new ResultsView();
+            var resultsViewModel = new ResultsViewModel(_dbContext);
+            var resultsView = new ResultsView { DataContext = resultsViewModel };
+            MainContentArea.Content = resultsView;
         }
 
         private void PrintResultsButton_Click(object sender, RoutedEventArgs e)
         {
-            MainContentArea.Content = new PrintView();
+            var printViewModel = new PrintViewModel(_dbContext);
+            var printView = new PrintView { DataContext = printViewModel };
+            MainContentArea.Content = printView;
         }
 
         private void SearchEditButton_Click(object sender, RoutedEventArgs e)
         {
-            var searchEditWindow = new SearchEditWindow();
-            searchEditWindow.DataContext = new SearchEditViewModel();
-            MainContentArea.Content = searchEditWindow;
+            var searchEditViewModel = new SearchEditViewModel(_dbContext);
+            // *** التصحيح هنا: استخدام اسم الكلاس الصحيح وهو SearchEditWindow ***
+            var searchEditUserControl = new SearchEditWindow { DataContext = searchEditViewModel };
+            MainContentArea.Content = searchEditUserControl;
         }
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
             var settingsMenuViewModel = new SettingsMenuViewModel();
             settingsMenuViewModel.RequestNavigate += SettingsMenuViewModel_RequestNavigate;
-            var settingsMenuView = new SettingsMenuView();
-            settingsMenuView.DataContext = settingsMenuViewModel;
+            var settingsMenuView = new SettingsMenuView { DataContext = settingsMenuViewModel };
             MainContentArea.Content = settingsMenuView;
         }
 
@@ -65,19 +73,13 @@ namespace LABOGRA
             UserControl? targetView = null;
             object? targetViewModel = null;
 
-            if (sender is SettingsMenuViewModel menuViewModel)
-            {
-                menuViewModel.RequestNavigate -= SettingsMenuViewModel_RequestNavigate;
-            }
-
             if (viewModelType == typeof(TestsManagementViewModel))
             {
-                targetViewModel = new TestsManagementViewModel();
+                targetViewModel = new TestsManagementViewModel(_dbContext);
                 targetView = new TestsManagementView();
             }
             else if (viewModelType == typeof(UsersManagementViewModel))
             {
-                // هنا نمرر الـ DbContext للفيو موديل المستخدمين
                 targetViewModel = new UsersManagementViewModel(_dbContext);
                 targetView = new UsersManagementView();
             }
@@ -89,7 +91,7 @@ namespace LABOGRA
             }
             else
             {
-                MessageBox.Show($"لا يمكن الانتقال إلى نوع الإعدادات المطلوب أو أن الـ ViewModel/View غير معرف.", "خطأ في التنقل", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"لا يمكن الانتقال إلى نوع الإعدادات المطلوب.", "خطأ في التنقل", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -99,5 +101,12 @@ namespace LABOGRA
             var loginView = new LABOGRA.Views.Login.LoginView();
             loginView.Show();
         }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            _dbContext?.Dispose();
+            base.OnClosed(e);
+        }
     }
 }
+// نهاية الكود لملف MainWindow.xaml.cs

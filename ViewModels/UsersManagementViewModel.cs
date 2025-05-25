@@ -1,9 +1,12 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿// بداية الكود لملف ViewModels/UsersManagementViewModel.cs
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LABOGRA.Models;
-using LABOGRA.Services.Database.Data; // مسار LabDbContext
+using LABOGRA.Services.Database.Data;
 using Microsoft.EntityFrameworkCore;
+using System; // تمت إضافة هذا السطر
 using System.Collections.ObjectModel;
+using System.Diagnostics; // *** إضافة هذا السطر ***
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -18,7 +21,7 @@ namespace LABOGRA.ViewModels
 
         [ObservableProperty]
         private ObservableCollection<User> _users = new ObservableCollection<User>();
-
+        // ... (باقي الخصائص كما هي) ...
         [ObservableProperty]
         private User? _selectedUser;
 
@@ -36,6 +39,7 @@ namespace LABOGRA.ViewModels
 
         public List<string> AvailableRoles { get; } = new List<string> { "Admin", "User" };
 
+
         public UsersManagementViewModel(LabDbContext dbContext)
         {
             _dbContext = dbContext;
@@ -47,7 +51,7 @@ namespace LABOGRA.ViewModels
             DeleteUserCommand = new AsyncRelayCommand(DeleteUserAsync, CanEditOrDeleteUser);
             CancelCommand = new RelayCommand(CancelOperation);
 
-            SelectedEntryRole = AvailableRoles.First(); // نضمن إنها دايمًا مش null
+            SelectedEntryRole = AvailableRoles.First();
 
             LoadUsersCommand.Execute(null);
         }
@@ -61,28 +65,40 @@ namespace LABOGRA.ViewModels
 
         private async Task LoadUsersAsync()
         {
-            Users.Clear();
-
-            var usersFromDb = await _dbContext.Users.ToListAsync();
-
-            if (!usersFromDb.Any())
+            try // إضافة try-catch هنا للمزيد من التفاصيل
             {
-                var defaultAdmin = new User
+                // *** إضافة سطر الطباعة هنا ***
+                Debug.WriteLine($"UsersManagementViewModel - DbContext Path: {_dbContext.Database.GetConnectionString()}");
+
+                Users.Clear();
+                var usersFromDb = await _dbContext.Users.ToListAsync(); // السطر الذي يسبب الخطأ
+
+                if (!usersFromDb.Any())
                 {
-                    Username = "Admin",
-                    PasswordHash = HashPassword("0000"),
-                    Role = "Admin"
-                };
-                _dbContext.Users.Add(defaultAdmin);
-                await _dbContext.SaveChangesAsync();
+                    var defaultAdmin = new User
+                    {
+                        Username = "Admin",
+                        PasswordHash = HashPassword("0000"), // تأكد أن هذه كلمة المرور الصحيحة
+                        Role = "Admin"
+                    };
+                    _dbContext.Users.Add(defaultAdmin);
+                    await _dbContext.SaveChangesAsync();
+                    usersFromDb.Add(defaultAdmin); // إضافة المستخدم للقائمة المحلية
+                }
 
-                usersFromDb.Add(defaultAdmin);
+                foreach (var user in usersFromDb)
+                    Users.Add(user);
             }
-
-            foreach (var user in usersFromDb)
-                Users.Add(user);
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in LoadUsersAsync: {ex.ToString()}"); // طباعة الخطأ كاملاً
+                MessageBox.Show($"Error loading users: {ex.Message}\n\nDetails: {ex.InnerException?.Message}", "Load Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                // يمكنك رمي الخطأ مرة أخرى إذا أردت أن يتوقف البرنامج هنا
+                // throw; 
+            }
         }
 
+        // ... (باقي الدوال كما هي: PrepareNewUser, CanEditOrDeleteUser, PrepareEditUser, ...) ...
         private void PrepareNewUser()
         {
             IsEditing = false;
@@ -102,8 +118,8 @@ namespace LABOGRA.ViewModels
 
             IsEditing = true;
             EntryUsername = SelectedUser.Username ?? string.Empty;
-            EntryPassword = string.Empty;
-            SelectedEntryRole = SelectedUser.Role ?? AvailableRoles.First(); // ضمان قيمة افتراضية
+            EntryPassword = string.Empty; // لا نعرض كلمة المرور للتعديل
+            SelectedEntryRole = SelectedUser.Role ?? AvailableRoles.First();
             SaveUserCommand.NotifyCanExecuteChanged();
         }
 
@@ -111,7 +127,7 @@ namespace LABOGRA.ViewModels
         {
             return !string.IsNullOrWhiteSpace(EntryUsername) &&
                    !string.IsNullOrWhiteSpace(SelectedEntryRole) &&
-                   (IsEditing || !string.IsNullOrWhiteSpace(EntryPassword));
+                   (IsEditing || !string.IsNullOrWhiteSpace(EntryPassword)); // كلمة المرور إلزامية فقط عند الإضافة
         }
 
         private async Task SaveUserAsync()
@@ -120,36 +136,32 @@ namespace LABOGRA.ViewModels
 
             if (IsEditing && SelectedUser != null)
             {
+                // تعديل المستخدم الحالي
                 SelectedUser.Username = EntryUsername;
-                SelectedUser.Role = SelectedEntryRole!;
-
+                SelectedUser.Role = SelectedEntryRole!; // استخدام ! للتأكيد أنه لن يكون null هنا
                 if (!string.IsNullOrWhiteSpace(EntryPassword))
                 {
                     SelectedUser.PasswordHash = HashPassword(EntryPassword);
                 }
-
                 _dbContext.Users.Update(SelectedUser);
                 await _dbContext.SaveChangesAsync();
-
                 MessageBox.Show($"تم تعديل المستخدم: {SelectedUser.Username}", "نجاح التعديل", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else
             {
+                // إضافة مستخدم جديد
                 var newUser = new User
                 {
                     Username = EntryUsername,
                     PasswordHash = HashPassword(EntryPassword),
                     Role = SelectedEntryRole!
                 };
-
                 _dbContext.Users.Add(newUser);
                 await _dbContext.SaveChangesAsync();
-
-                Users.Add(newUser);
+                // لا حاجة لإضافة newUser إلى Users يدوياً هنا، LoadUsersAsync سيفعل ذلك
                 MessageBox.Show($"تمت إضافة المستخدم: {newUser.Username}", "نجاح الإضافة", MessageBoxButton.OK, MessageBoxImage.Information);
             }
-
-            await LoadUsersAsync();
+            await LoadUsersAsync(); // إعادة تحميل القائمة
             CancelOperation();
         }
 
@@ -157,7 +169,7 @@ namespace LABOGRA.ViewModels
         {
             if (!CanEditOrDeleteUser() || SelectedUser == null) return;
 
-            if (SelectedUser.Username?.ToLower() == "admin")
+            if (SelectedUser.Username?.ToLower() == "admin") // منع حذف المستخدم admin
             {
                 MessageBox.Show("لا يمكن حذف حساب المسؤول الرئيسي.", "غير مسموح", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
@@ -167,9 +179,8 @@ namespace LABOGRA.ViewModels
             {
                 _dbContext.Users.Remove(SelectedUser);
                 await _dbContext.SaveChangesAsync();
-
                 MessageBox.Show($"تم حذف المستخدم: {SelectedUser.Username}", "نجاح الحذف", MessageBoxButton.OK, MessageBoxImage.Information);
-                await LoadUsersAsync();
+                await LoadUsersAsync(); // إعادة تحميل القائمة
                 CancelOperation();
             }
         }
@@ -205,20 +216,26 @@ namespace LABOGRA.ViewModels
             }
         }
 
+        // Partial methods for property changes
         partial void OnEntryUsernameChanged(string value) => SaveUserCommand.NotifyCanExecuteChanged();
         partial void OnEntryPasswordChanged(string value) => SaveUserCommand.NotifyCanExecuteChanged();
         partial void OnSelectedEntryRoleChanged(string? value) => SaveUserCommand.NotifyCanExecuteChanged();
-
         partial void OnSelectedUserChanged(User? value)
         {
             PrepareEditUserCommand.NotifyCanExecuteChanged();
             DeleteUserCommand.NotifyCanExecuteChanged();
-            if (value == null && IsEditing)
+            if (value == null && IsEditing) // إذا تم إلغاء التحديد أثناء التعديل
             {
                 CancelOperation();
             }
+            else if (value != null) // إذا تم تحديد مستخدم، ندخل في وضع التعديل
+            {
+                // لا نستدعي PrepareEditUser هنا مباشرة لأن هذا قد يؤدي إلى حلقة
+                // بدلاً من ذلك، واجهة المستخدم ستربط الأزرار بـ PrepareEditUserCommand
+            }
         }
-
         partial void OnIsEditingChanged(bool value) => SaveUserCommand.NotifyCanExecuteChanged();
+
     }
 }
+// نهاية الكود لملف ViewModels/UsersManagementViewModel.cs

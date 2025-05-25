@@ -1,18 +1,17 @@
-﻿using System.Windows.Controls;
-using LABOGRA.ViewModels; // لاستخدام الـ ViewModel
+﻿// بداية الكود لملف Views/TestsManagement/TestsManagementView.xaml.cs
+using System.Windows.Controls;
+// لم نعد بحاجة لـ using LABOGRA.ViewModels; هنا
 
 namespace LABOGRA.Views.TestsManagement
 {
-    /// <summary>
-    /// Interaction logic for TestsManagementView.xaml
-    /// </summary>
-    public partial class TestsManagementView : UserControl // تم تغيير من Window إلى UserControl
+    public partial class TestsManagementView : UserControl
     {
         public TestsManagementView()
         {
             InitializeComponent();
-            // تعيين الـ DataContext للـ View
-            DataContext = new TestsManagementViewModel();
+            // لا نقوم بتعيين DataContext هنا.
+            // سيتم تعيينه من MainWindow.xaml.cs
         }
     }
 }
+// نهاية الكود لملف Views/TestsManagement/TestsManagementView.xaml.cs

@@ -3,6 +3,7 @@ using System;
 using LABOGRA.Services.Database.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LABOGRA.Migrations
 {
     [DbContext(typeof(LabDbContext))]
-    partial class LabDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250523113127_UpdateUserModel")]
+    partial class UpdateUserModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.4");
@@ -217,7 +220,7 @@ namespace LABOGRA.Migrations
                         new
                         {
                             Id = 1,
-                            PasswordHash = "9af15b336e6a9619928537df30b2e6a2376569fcf9d7e773eccede65606529a0",
+                            PasswordHash = "0000",
                             Role = "Admin",
                             Username = "admin"
                         });

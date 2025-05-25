@@ -19,6 +19,14 @@
     📄 20250511163559_UpdatePatientSchema.Designer.cs
     📄 20250514074234_AddGeneratedIdColumnToPatientTable.cs
     📄 20250514074234_AddGeneratedIdColumnToPatientTable.Designer.cs
+    📄 20250520160135_AddUsersTable.cs
+    📄 20250520160135_AddUsersTable.Designer.cs
+    📄 20250520213412_AddUserIdAndFix.cs
+    📄 20250520213412_AddUserIdAndFix.Designer.cs
+    📄 20250523113127_UpdateUserModel.cs
+    📄 20250523113127_UpdateUserModel.Designer.cs
+    📄 20250523115405_NewInitialCreate.cs
+    📄 20250523115405_NewInitialCreate.Designer.cs
     📄 LabDbContextModelSnapshot.cs
 📁 Models
     📄 LabOrder.cs
@@ -38,8 +46,10 @@
         📁 Data
             📄 LabDbContext.cs
             📄 LabDbContextFactory.cs
+            📄 users.xml
         📄 DatabaseService.cs
     📄 PatientReportGenerator.cs
+    📄 UserService.cs
 📁 ViewModels
     📄 LabOrderItemViewModel.cs
     📄 LoginViewModel.cs
