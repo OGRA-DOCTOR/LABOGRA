@@ -1,86 +1,83 @@
-﻿// بداية الكود لملف MainWindow.xaml.cs
-using LABOGRA.Views.Patients;
+﻿using LABOGRA.Views.Patients;
 using LABOGRA.Views.Results;
 using LABOGRA.Views.Print;
 using LABOGRA.Views.TestsManagement;
-using LABOGRA.Views.SearchEdit; // هذا using صحيح لـ namespace
+using LABOGRA.Views.SearchEdit;
 using LABOGRA.Views.Settings;
 using LABOGRA.Views.UsersManagement;
 using System.Windows;
 using LABOGRA.ViewModels;
 using System.Windows.Controls;
-using Microsoft.EntityFrameworkCore;
-using LABOGRA.Services.Database.Data;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 
 namespace LABOGRA
 {
     public partial class MainWindow : Window
     {
-        private readonly LabDbContext _dbContext;
+        private readonly IServiceProvider _serviceProvider;
 
-        public MainWindow()
+        public MainWindow(IServiceProvider serviceProvider)
         {
             InitializeComponent();
-            var optionsBuilder = new DbContextOptionsBuilder<LabDbContext>();
-            optionsBuilder.UseSqlite(DatabasePathHelper.GetConnectionString());
-            _dbContext = new LabDbContext(optionsBuilder.Options);
+            _serviceProvider = serviceProvider;
 
-            var patientsViewModel = new PatientsViewModel(_dbContext);
-            var patientsView = new PatientsView { DataContext = patientsViewModel };
+            // تعيين PatientsView كمحتوى افتراضي عند بدء التشغيل
+            var patientsView = new PatientsView();
+            patientsView.DataContext = _serviceProvider.GetRequiredService<PatientsViewModel>();
             MainContentArea.Content = patientsView;
         }
 
         private void AddPatientsButton_Click(object sender, RoutedEventArgs e)
         {
-            var patientsViewModel = new PatientsViewModel(_dbContext);
-            var patientsView = new PatientsView { DataContext = patientsViewModel };
+            var patientsView = new PatientsView();
+            patientsView.DataContext = _serviceProvider.GetRequiredService<PatientsViewModel>();
             MainContentArea.Content = patientsView;
         }
 
         private void RecordResultsButton_Click(object sender, RoutedEventArgs e)
         {
-            var resultsViewModel = new ResultsViewModel(_dbContext);
-            var resultsView = new ResultsView { DataContext = resultsViewModel };
+            var resultsView = new ResultsView();
+            resultsView.DataContext = _serviceProvider.GetRequiredService<ResultsViewModel>();
             MainContentArea.Content = resultsView;
         }
 
         private void PrintResultsButton_Click(object sender, RoutedEventArgs e)
         {
-            var printViewModel = new PrintViewModel(_dbContext);
-            var printView = new PrintView { DataContext = printViewModel };
+            var printView = new PrintView();
+            printView.DataContext = _serviceProvider.GetRequiredService<PrintViewModel>();
             MainContentArea.Content = printView;
         }
 
         private void SearchEditButton_Click(object sender, RoutedEventArgs e)
         {
-            var searchEditViewModel = new SearchEditViewModel(_dbContext);
-            // *** التصحيح هنا: استخدام اسم الكلاس الصحيح وهو SearchEditWindow ***
-            var searchEditUserControl = new SearchEditWindow { DataContext = searchEditViewModel };
-            MainContentArea.Content = searchEditUserControl;
+            var searchEditView = new SearchEditWindow();
+            searchEditView.DataContext = _serviceProvider.GetRequiredService<SearchEditViewModel>();
+            MainContentArea.Content = searchEditView;
         }
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
-            var settingsMenuViewModel = new SettingsMenuViewModel();
+            var settingsMenuView = new SettingsMenuView();
+            var settingsMenuViewModel = _serviceProvider.GetRequiredService<SettingsMenuViewModel>();
             settingsMenuViewModel.RequestNavigate += SettingsMenuViewModel_RequestNavigate;
-            var settingsMenuView = new SettingsMenuView { DataContext = settingsMenuViewModel };
+            settingsMenuView.DataContext = settingsMenuViewModel;
             MainContentArea.Content = settingsMenuView;
         }
 
-        private void SettingsMenuViewModel_RequestNavigate(object? sender, System.Type viewModelType)
+        private void SettingsMenuViewModel_RequestNavigate(object? sender, Type viewModelType)
         {
             UserControl? targetView = null;
             object? targetViewModel = null;
 
             if (viewModelType == typeof(TestsManagementViewModel))
             {
-                targetViewModel = new TestsManagementViewModel(_dbContext);
+                targetViewModel = _serviceProvider.GetRequiredService<TestsManagementViewModel>();
                 targetView = new TestsManagementView();
             }
             else if (viewModelType == typeof(UsersManagementViewModel))
             {
-                targetViewModel = new UsersManagementViewModel(_dbContext);
+                targetViewModel = _serviceProvider.GetRequiredService<UsersManagementViewModel>();
                 targetView = new UsersManagementView();
             }
 
@@ -91,7 +88,7 @@ namespace LABOGRA
             }
             else
             {
-                MessageBox.Show($"لا يمكن الانتقال إلى نوع الإعدادات المطلوب.", "خطأ في التنقل", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("لا يمكن الانتقال إلى نوع الإعدادات المطلوب.", "خطأ في التنقل", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -101,12 +98,5 @@ namespace LABOGRA
             var loginView = new LABOGRA.Views.Login.LoginView();
             loginView.Show();
         }
-
-        protected override void OnClosed(EventArgs e)
-        {
-            _dbContext?.Dispose();
-            base.OnClosed(e);
-        }
     }
 }
-// نهاية الكود لملف MainWindow.xaml.cs
